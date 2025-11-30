@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,8 +18,22 @@
     ... and so on
 */
 uint64_t global_counter = 0; // global cycle counter
+uint64_t fetch_seq_counter = 0;
 std::vector<instruction> instr_list; //global  instruction list
 
+void fetch(proc_params params, FILE* FP) {
+    uint64_t pc;
+    int op_type, dest, src1, src2;
+    for (int i = 0; i < params.width; i++) {
+        if (fscanf(FP, "%llx %d %d %d %d", &pc, &op_type, &dest, &src1, &src2) != EOF) {
+            instruction instr(pc, op_type, dest, src1, src2);
+            instr.seq_num = fetch_seq_counter++;
+            instr_list.push_back(instr);
+            printf("%d\n", instr.seq_num);
+            //printf("%llx %d %d %d %d\n", instr.pc, instr.op_type, instr.dest, instr.src1,instr.src2); //Print to check if inputs have been read correctly
+        }
+    }
+}
 
 int main (int argc, char* argv[])
 {
@@ -68,14 +83,20 @@ int main (int argc, char* argv[])
     bool test = true;
     do {
         global_counter++;
-        if (fscanf(FP, "%llx %d %d %d %d", &pc, &op_type, &dest, &src1, &src2) != EOF) {
-            instruction instr(pc, op_type, dest, src1, src2);
-            instr_list.push_back(instr);
-            printf("%llx %d %d %d %d\n", instr.pc, instr.op_type, instr.dest, instr.src1,instr.src2); //Print to check if inputs have been read correctly
-        }
-        else {
-            test = false;
-        }
+        // for (int i = 0; i < params.width; i++) {
+        //     if (fscanf(FP, "%llx %d %d %d %d", &pc, &op_type, &dest, &src1, &src2) != EOF) {
+        //     instruction instr(pc, op_type, dest, src1, src2);
+        //     instr.seq_num = fetch_seq_counter++;
+        //     instr_list.push_back(instr);
+        //     printf("%d\n", instr.seq_num);
+        //     //printf("%llx %d %d %d %d\n", instr.pc, instr.op_type, instr.dest, instr.src1,instr.src2); //Print to check if inputs have been read correctly
+        //     }
+        //     else {
+        //     test = false;
+        // }
+        // }
+        fetch(params,  FP);
+        test = false;
     }
     while (/*Advance_Cycle()*/test);
 
