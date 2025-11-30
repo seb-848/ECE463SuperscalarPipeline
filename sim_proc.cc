@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+//#include <cinttypes>
 #include "sim_proc.h"
 
 /*  argc holds the number of command line arguments
@@ -15,6 +16,10 @@
     argv[2] = "32"
     ... and so on
 */
+uint64_t global_counter = 0; // global cycle counter
+std::vector<instruction> instr_list; //global  instruction list
+
+
 int main (int argc, char* argv[])
 {
     FILE *FP;               // File handler
@@ -55,8 +60,33 @@ int main (int argc, char* argv[])
     // inside the Fetch() function.
     //
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
-    while(fscanf(FP, "%lx %d %d %d %d", &pc, &op_type, &dest, &src1, &src2) != EOF)
-        printf("%lx %d %d %d %d\n", pc, op_type, dest, src1, src2); //Print to check if inputs have been read correctly
+    pipeline_stage* DE = new pipeline_stage(params.width);
+    pipeline_stage* RN = new pipeline_stage(params.width);
+    pipeline_stage* RR = new pipeline_stage(params.width);
+    pipeline_stage* DI = new pipeline_stage(params.width);
+    //pipeline_stage WB;
+    bool test = true;
+    do {
+        global_counter++;
+        if (fscanf(FP, "%llx %d %d %d %d", &pc, &op_type, &dest, &src1, &src2) != EOF) {
+            instruction instr(pc, op_type, dest, src1, src2);
+            instr_list.push_back(instr);
+            printf("%llx %d %d %d %d\n", instr.pc, instr.op_type, instr.dest, instr.src1,instr.src2); //Print to check if inputs have been read correctly
+        }
+        else {
+            test = false;
+        }
+    }
+    while (/*Advance_Cycle()*/test);
 
+    // while(fscanf(FP, "%lx %d %d %d %d", &pc, &op_type, &dest, &src1, &src2) != EOF)
+    // {
+    //     printf("%lx %d %d %d %d\n", pc, op_type, dest, src1, src2); //Print to check if inputs have been read correctly
+    // }
+    delete(DE);
+    delete(RN);
+    delete(RR);
+    delete(DI);
+    
     return 0;
 }
