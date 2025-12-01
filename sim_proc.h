@@ -9,6 +9,12 @@ typedef struct proc_params{
 }proc_params;
 
 // Put additional data structures here as per your requirement
+struct iq_entry {
+    bool valid = false;
+    int rob_tag = -1;
+    bool src1_ready = false;
+    bool src2_ready = false;
+};
 
 struct rmt_entry {
     bool valid = false;
@@ -20,6 +26,22 @@ struct rob_entry {
     bool ready = false;
     int dst = -1;
     int global_idx = -1;
+};
+class IQ {
+    public:
+    std::vector<iq_entry> issue_queue;
+    unsigned long int count;
+    unsigned long int iq_size;
+
+    IQ(unsigned long int iq_s) {
+        iq_size = iq_s;
+        issue_queue.resize(iq_size);
+        count = 0;
+    }
+
+    bool available(unsigned long w) {
+        return (iq_size - count) >= w;
+    }
 };
 
 class ROB {
@@ -33,6 +55,7 @@ class ROB {
     ROB(unsigned long int r_size) {
         rob_size = r_size;
         buffer.resize(rob_size);
+        count = 0;
     }
 
     bool available(unsigned long w) {
@@ -148,8 +171,10 @@ class Simulator {
     Pipeline_stage* RN;
     Pipeline_stage* RR;
     Pipeline_stage* DI;
+    Pipeline_stage* IS;
     rmt_entry rmt[67];
     ROB* rob_buffer;
+    IQ* iq_str;
 
     Simulator(proc_params p, FILE* f) {
         params = p;
@@ -159,7 +184,9 @@ class Simulator {
         RN = new Pipeline_stage(params.width);
         RR = new Pipeline_stage(params.width);
         DI = new Pipeline_stage(params.width);
+        IS = new Pipeline_stage(params.width);
         rob_buffer = new ROB(params.rob_size);
+        iq_str = new IQ(params.iq_size);
 
         for (int i = 0; i < 67; i++) {
             rmt[i].rob_tag = -1;

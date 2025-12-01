@@ -163,7 +163,22 @@ void Simulator::RegRead() {
 
     if (!DI->isEmpty()) return;
     RR->fill_next_stage(DI);
+}
 
+void Simulator::dispatch() {
+    if (DI->isEmpty()) return;
+
+    //timing
+    if (instr_list[DI->pipeline_instr[0]].DI.start == -1) {
+        for (int i = 0; i < DI->pipeline_instr.size(); i++) {
+            instr_list[DI->pipeline_instr[i]].DI.start = global_counter;
+        }
+    }
+    for (int i = 0; i < DI->pipeline_instr.size(); i++) {
+        instr_list[DI->pipeline_instr[i]].DI.duration++;
+    }
+
+    if (!IS->isEmpty() || iq_str->available(params.width)) return;
 }
 
 int main (int argc, char* argv[])
@@ -217,7 +232,8 @@ int main (int argc, char* argv[])
     do {
         // global_counter++;
         //printf("FE empty: %d\n", sim.FE->isEmpty());
-        //sim.dispatch();
+        
+        sim.dispatch();
         sim.RegRead();
         sim.rename();
         sim.decode();
@@ -231,7 +247,7 @@ int main (int argc, char* argv[])
         //printf("global counter: %llx\n", global_counter);
         test = false;
     }
-    while (/*Advance_Cycle()*/global_counter < 5);
+    while (/*Advance_Cycle()*/global_counter < 7);
 
     for (int i = 0; i < instr_list.size(); i++) {
         printf("%d fu{%d} src{%d,%d} dst{%d} ", i, instr_list[i].op_type, instr_list[i].src1, instr_list[i].src2, instr_list[i].dest);
