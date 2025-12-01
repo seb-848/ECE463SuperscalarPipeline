@@ -20,60 +20,131 @@
 uint64_t global_counter = 0; // global cycle counter
 uint64_t fetch_seq_counter = 0;
 std::vector<instruction> instr_list; //global  instruction list
-rmt_entry rmt[67];
+//rmt_entry rmt[67];
+
+// void Pipeline_stage::increment_duration(std::vector <instruction> &list, timing &instruction::* member) {
+//     for (int i = 0; i < this->pipeline_instr.size(); i++) {
+//         printf("%d\n", i);
+//         if (instr_list[this->pipeline_instr[i]]..start == -1) {
+//             instr_list[this->pipeline_instr[i]].timer.start = global_counter;
+//         }
+//         else {
+//             instr_list[this->pipeline_instr[i]].DE.duration++;
+//         }
+//     }
+// }
+
+void Pipeline_stage::fill_next_stage (Pipeline_stage* stage) {
+        for (int i = 0; i < this->pipeline_instr.size(); i++) {
+            stage->pipeline_instr.push_back(this->pipeline_instr[i]); stage->count++;
+            //stage->pipeline_instr
+        }
+        this->count = 0;
+        this->clear();
+        return;
+    }
 
 void Simulator::fetch() {
-    if (!DE->isEmpty()) return;
-    uint64_t pc;
-    int op_type, dest, src1, src2;
-    for (int i = 0; i < params.width; i++) {
-        if (fscanf(FP, "%llx %d %d %d %d", &pc, &op_type, &dest, &src1, &src2) != EOF) {
-            instruction instr(pc, op_type, dest, src1, src2);
-            instr.seq_num = fetch_seq_counter++;
-            instr_list.push_back(instr);
-            instr.FE.start = global_counter;
-            printf("%d\n", instr.seq_num);
-            DE->instr[DE->count++] = instr.seq_num;
-            //printf("%llx %d %d %d %d\n", instr.pc, instr.op_type, instr.dest, instr.src1,instr.src2); //Print to check if inputs have been read correctly
-        }
-        else {
-            return;
+    printf("in fetch\n");
+    
+    if (FE->isEmpty()) {
+        uint64_t pc;
+        int op_type, dest, src1, src2;
+        for (int i = 0; i < params.width; i++) {
+            //printf("%d \n", i);
+            if (fscanf(FP, "%llx %d %d %d %d", &pc, &op_type, &dest, &src1, &src2) != EOF) {
+                instruction instr(pc, op_type, dest, src1, src2);
+            
+                instr.seq_num = fetch_seq_counter++;
+                instr_list.push_back(instr);
+                instr_list[fetch_seq_counter - 1].FE.start = global_counter;
+                instr_list[fetch_seq_counter - 1].FE.duration++;
+                printf("start for %d : %d\n",i, instr.FE.start);
+                FE->pipeline_instr.push_back(instr.seq_num); FE->count++;
+
+                // DE->pipeline_instr.push_back(instr.seq_num); DE->count++;
+                // FE->clear();
+                printf("seq num: %d\n", instr_list[fetch_seq_counter - 1].seq_num);
+            }
         }
     }
+
+    if (!DE->isEmpty()) {
+        //FE->increment_duration(instr_list);
+        for (int i = 0; i < FE->pipeline_instr.size(); i++) {
+            instr_list[FE->pipeline_instr[i]].FE.duration++;
+        }
+        return;
+    }
+
+    FE->fill_next_stage(DE);
 }
 
 void Simulator::decode() {
+    printf("in decode\n");
     if (DE->isEmpty()) return;
-    for (int i = 0; i < DE->instr.size(); i++) {
-        if (instr_list[DE->instr[i]].DE.start == -1) {
-            instr_list[DE->instr[i]].DE.start = global_counter;
+    
+    // timing
+    if (instr_list[DE->pipeline_instr[0]].DE.start == -1) {
+        for (int i = 0; i < DE->pipeline_instr.size(); i++) {
+            instr_list[DE->pipeline_instr[i]].DE.start = global_counter;
         }
-        else {
-            instr_list[DE->instr[i]].DE.duration++;
-        }
+    }
+    for (int i = 0; i < DE->pipeline_instr.size(); i++) {
+        instr_list[DE->pipeline_instr[i]].DE.duration++;
     }
     if (!RN->isEmpty()) return;
-    for (int i = 0; i < DE->instr.size(); i++) {
-        RN->instr[RN->count++] = DE->instr[i];
-    }
-    DE->clear();
+    DE->fill_next_stage(RN);
 }
 
 void Simulator::rename() {
+    printf("in rename\n");
     if (RN->isEmpty()) return;
 
-    for (int i = 0; i < RN->instr.size(); i++) {
-        if (instr_list[RN->instr[i]].RN.start == -1) {
-            instr_list[RN->instr[i]].RN.start = global_counter;
-        }
-        else {
-            instr_list[RN->instr[i]].RN.duration++;
+    if (instr_list[RN->pipeline_instr[0]].RN.start == -1) {
+        for (int i = 0; i < RN->pipeline_instr.size(); i++) {
+            instr_list[RN->pipeline_instr[i]].RN.start = global_counter;
         }
     }
+    for (int i = 0; i < RN->pipeline_instr.size(); i++) {
+        instr_list[RN->pipeline_instr[i]].RN.duration++;
+    }
+printf("still in rename\n");
+    if (!RR->isEmpty() || !rob_buffer->available(params.width)) return;
+    for (int i = 0; i < RN->pipeline_instr.size(); i++) {
+        instr_list[RN->pipeline_instr[i]].rob_tag = rob_buffer->allocate(RN->pipeline_instr[i], instr_list[RN->pipeline_instr[i]].dest);
+printf("in rename loop\n");
+        if (instr_list[RN->pipeline_instr[i]].src1 == -1 || !rmt[instr_list[RN->pipeline_instr[i]].src1].valid) {
+            instr_list[RN->pipeline_instr[i]].src1_tag = -1;
+            instr_list[RN->pipeline_instr[i]].src1_ready = true;
+        }
+        else {
+            instr_list[RN->pipeline_instr[i]].src1_tag = rmt[instr_list[RN->pipeline_instr[i]].src1].rob_tag;
+            instr_list[RN->pipeline_instr[i]].src1_ready = rob_buffer->buffer[instr_list[RN->pipeline_instr[i]].src1_tag].ready;
+        }
+printf("src1 fixed\n");
+        if (instr_list[RN->pipeline_instr[i]].src2 == -1 || !rmt[instr_list[RN->pipeline_instr[i]].src2].valid) {
+            instr_list[RN->pipeline_instr[i]].src2_tag = -1;
+            instr_list[RN->pipeline_instr[i]].src2_ready = true;
+        }
+        else {
+            instr_list[RN->pipeline_instr[i]].src2_tag = rmt[instr_list[RN->pipeline_instr[i]].src2].rob_tag;
+            instr_list[RN->pipeline_instr[i]].src2_ready = rob_buffer->buffer[instr_list[RN->pipeline_instr[i]].src2_tag].ready;
+        }
+printf("src2 fixed\n");
+        if (instr_list[RN->pipeline_instr[i]].dest != -1) {
+            rmt[instr_list[RN->pipeline_instr[i]].dest].valid = true;
+            rmt[instr_list[RN->pipeline_instr[i]].dest].rob_tag = instr_list[RN->pipeline_instr[i]].rob_tag;
+        }
+printf("dest fixed\n");
+        RN->fill_next_stage(RR);
+        printf("next stage filled\n");
+        RN->clear();
+    }
+}
 
-    if (!RR->isEmpty()) return;
-
-    //if ()
+void Simulator::register_read() {
+    
 }
 
 int main (int argc, char* argv[])
@@ -125,8 +196,8 @@ int main (int argc, char* argv[])
     //Pipeline_stage* DE = new Pipeline_stage(params.width);
     bool test = true;
     do {
-        global_counter++;
-        
+        // global_counter++;
+        //printf("FE empty: %d\n", sim.FE->isEmpty());
         sim.rename();
         sim.decode();
         sim.fetch();
@@ -134,9 +205,27 @@ int main (int argc, char* argv[])
         // if (!sim.DE->isEmpty()) printf("not empty\n");
         // else printf("empty\n");
         // printf("empty: %d\n", sim.DE->isEmpty());
+        global_counter++;
+        //printf("%d\n", instr_list[0].FE.start);
+        //printf("global counter: %llx\n", global_counter);
         test = false;
     }
-    while (/*Advance_Cycle()*/test);
+    while (/*Advance_Cycle()*/global_counter < 3);
+
+    for (int i = 0; i < instr_list.size(); i++) {
+        printf("%d fu{%d} src{%d,%d} dst{%d} ", i, instr_list[i].op_type, instr_list[i].src1, instr_list[i].src2, instr_list[i].dest);
+
+        printf("FE{%d,%d} DE{%d,%d} RN{%d,%d} RR{%d,%d} DI{%d,%d} IS{%d,%d} EX{%d,%d} WB{%d,%d} RT{%d,%d}\n",
+            instr_list[i].FE.start, instr_list[i].FE.duration,
+            instr_list[i].DE.start, instr_list[i].DE.duration,
+            instr_list[i].RN.start, instr_list[i].RN.duration,
+            instr_list[i].RR.start, instr_list[i].RR.duration,
+            instr_list[i].DI.start, instr_list[i].DI.duration,
+            instr_list[i].IS.start, instr_list[i].IS.duration,
+            instr_list[i].EX.start, instr_list[i].EX.duration,
+            instr_list[i].WB.start, instr_list[i].WB.duration,
+            instr_list[i].RT.start, instr_list[i].RT.duration);
+    }
 
     // while(fscanf(FP, "%lx %d %d %d %d", &pc, &op_type, &dest, &src1, &src2) != EOF)
     // {
