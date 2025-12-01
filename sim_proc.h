@@ -77,8 +77,11 @@ typedef struct instruction {
     int src2 = -1;
     bool src1_ready = false;
     bool src2_ready = false;
+    // rmt tags for srcs
     int src1_tag = -1;
     int src2_tag = -1;
+    // index in rob that instruction is in
+    // if add r2, r4, #2 and rob tag is 5, rmt gets 5 for the rob tag and valid 1 into r2
     int rob_tag = -1;
 
     instruction(uint64_t p, int op, int d, int s1, int s2) {
@@ -166,7 +169,7 @@ class Simulator {
     void fetch();
     void decode();
     void rename();
-    void register_read();
+    void RegRead();
     void dispatch();
     void issue();
     void execute();

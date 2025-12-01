@@ -101,6 +101,7 @@ void Simulator::rename() {
     printf("in rename\n");
     if (RN->isEmpty()) return;
 
+    // timing
     if (instr_list[RN->pipeline_instr[0]].RN.start == -1) {
         for (int i = 0; i < RN->pipeline_instr.size(); i++) {
             instr_list[RN->pipeline_instr[i]].RN.start = global_counter;
@@ -109,42 +110,60 @@ void Simulator::rename() {
     for (int i = 0; i < RN->pipeline_instr.size(); i++) {
         instr_list[RN->pipeline_instr[i]].RN.duration++;
     }
-printf("still in rename\n");
+//printf("still in rename\n");
+    // check for rr busy or not and if space in rob
     if (!RR->isEmpty() || !rob_buffer->available(params.width)) return;
     for (int i = 0; i < RN->pipeline_instr.size(); i++) {
-        instr_list[RN->pipeline_instr[i]].rob_tag = rob_buffer->allocate(RN->pipeline_instr[i], instr_list[RN->pipeline_instr[i]].dest);
-printf("in rename loop\n");
-        if (instr_list[RN->pipeline_instr[i]].src1 == -1 || !rmt[instr_list[RN->pipeline_instr[i]].src1].valid) {
-            instr_list[RN->pipeline_instr[i]].src1_tag = -1;
-            instr_list[RN->pipeline_instr[i]].src1_ready = true;
+        instruction &current_inst = instr_list[RN->pipeline_instr[i]];
+
+        // put into rob and get rob tag
+        current_inst.rob_tag = rob_buffer->allocate(RN->pipeline_instr[i], current_inst.dest);
+
+        // dont think we need the global sequential index
+//printf("in rename loop\n");
+        // getting value from arf
+        if (current_inst.src1 == -1 || !rmt[current_inst.src1].valid) {
+            current_inst.src1_tag = -1;
+            current_inst.src1_ready = true;
         }
         else {
-            instr_list[RN->pipeline_instr[i]].src1_tag = rmt[instr_list[RN->pipeline_instr[i]].src1].rob_tag;
-            instr_list[RN->pipeline_instr[i]].src1_ready = rob_buffer->buffer[instr_list[RN->pipeline_instr[i]].src1_tag].ready;
+            current_inst.src1_tag = rmt[current_inst.src1].rob_tag;
+            current_inst.src1_ready = rob_buffer->buffer[current_inst.src1_tag].ready;
         }
-printf("src1 fixed\n");
-        if (instr_list[RN->pipeline_instr[i]].src2 == -1 || !rmt[instr_list[RN->pipeline_instr[i]].src2].valid) {
-            instr_list[RN->pipeline_instr[i]].src2_tag = -1;
-            instr_list[RN->pipeline_instr[i]].src2_ready = true;
+
+        if (current_inst.src2 == -1 || !rmt[current_inst.src2].valid) {
+            current_inst.src2_tag = -1;
+            current_inst.src2_ready = true;
         }
         else {
-            instr_list[RN->pipeline_instr[i]].src2_tag = rmt[instr_list[RN->pipeline_instr[i]].src2].rob_tag;
-            instr_list[RN->pipeline_instr[i]].src2_ready = rob_buffer->buffer[instr_list[RN->pipeline_instr[i]].src2_tag].ready;
+            current_inst.src2_tag = rmt[current_inst.src2].rob_tag;
+            current_inst.src2_ready = rob_buffer->buffer[current_inst.src2_tag].ready;
         }
-printf("src2 fixed\n");
-        if (instr_list[RN->pipeline_instr[i]].dest != -1) {
-            rmt[instr_list[RN->pipeline_instr[i]].dest].valid = true;
-            rmt[instr_list[RN->pipeline_instr[i]].dest].rob_tag = instr_list[RN->pipeline_instr[i]].rob_tag;
-        }
-printf("dest fixed\n");
+        
+        rmt[current_inst.dest].valid = true;
+        rmt[current_inst.dest].rob_tag = current_inst.rob_tag;
+
+//printf("dest fixed\n");
         RN->fill_next_stage(RR);
-        printf("next stage filled\n");
-        RN->clear();
+        //printf("next stage filled\n");
     }
 }
 
-void Simulator::register_read() {
-    
+void Simulator::RegRead() {
+    if (RR->isEmpty()) return;
+    // timing
+    if (instr_list[RR->pipeline_instr[0]].RR.start == -1) {
+        for (int i = 0; i < RR->pipeline_instr.size(); i++) {
+            instr_list[RR->pipeline_instr[i]].RR.start = global_counter;
+        }
+    }
+    for (int i = 0; i < RR->pipeline_instr.size(); i++) {
+        instr_list[RR->pipeline_instr[i]].RR.duration++;
+    }
+
+    if (!DI->isEmpty()) return;
+    RR->fill_next_stage(DI);
+
 }
 
 int main (int argc, char* argv[])
@@ -198,6 +217,8 @@ int main (int argc, char* argv[])
     do {
         // global_counter++;
         //printf("FE empty: %d\n", sim.FE->isEmpty());
+        //sim.dispatch();
+        sim.RegRead();
         sim.rename();
         sim.decode();
         sim.fetch();
@@ -210,7 +231,7 @@ int main (int argc, char* argv[])
         //printf("global counter: %llx\n", global_counter);
         test = false;
     }
-    while (/*Advance_Cycle()*/global_counter < 3);
+    while (/*Advance_Cycle()*/global_counter < 5);
 
     for (int i = 0; i < instr_list.size(); i++) {
         printf("%d fu{%d} src{%d,%d} dst{%d} ", i, instr_list[i].op_type, instr_list[i].src1, instr_list[i].src2, instr_list[i].dest);
