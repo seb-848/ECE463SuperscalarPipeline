@@ -20,8 +20,10 @@
 uint64_t global_counter = 0; // global cycle counter
 uint64_t fetch_seq_counter = 0;
 std::vector<instruction> instr_list; //global  instruction list
+rmt_entry rmt[67];
 
-void fetch(proc_params params, FILE* FP) {
+void Simulator::fetch() {
+    if (!DE->isEmpty()) return;
     uint64_t pc;
     int op_type, dest, src1, src2;
     for (int i = 0; i < params.width; i++) {
@@ -29,10 +31,49 @@ void fetch(proc_params params, FILE* FP) {
             instruction instr(pc, op_type, dest, src1, src2);
             instr.seq_num = fetch_seq_counter++;
             instr_list.push_back(instr);
+            instr.FE.start = global_counter;
             printf("%d\n", instr.seq_num);
+            DE->instr[DE->count++] = instr.seq_num;
             //printf("%llx %d %d %d %d\n", instr.pc, instr.op_type, instr.dest, instr.src1,instr.src2); //Print to check if inputs have been read correctly
         }
+        else {
+            return;
+        }
     }
+}
+
+void Simulator::decode() {
+    if (DE->isEmpty()) return;
+    for (int i = 0; i < DE->instr.size(); i++) {
+        if (instr_list[DE->instr[i]].DE.start == -1) {
+            instr_list[DE->instr[i]].DE.start = global_counter;
+        }
+        else {
+            instr_list[DE->instr[i]].DE.duration++;
+        }
+    }
+    if (!RN->isEmpty()) return;
+    for (int i = 0; i < DE->instr.size(); i++) {
+        RN->instr[RN->count++] = DE->instr[i];
+    }
+    DE->clear();
+}
+
+void Simulator::rename() {
+    if (RN->isEmpty()) return;
+
+    for (int i = 0; i < RN->instr.size(); i++) {
+        if (instr_list[RN->instr[i]].RN.start == -1) {
+            instr_list[RN->instr[i]].RN.start = global_counter;
+        }
+        else {
+            instr_list[RN->instr[i]].RN.duration++;
+        }
+    }
+
+    if (!RR->isEmpty()) return;
+
+    //if ()
 }
 
 int main (int argc, char* argv[])
@@ -75,27 +116,24 @@ int main (int argc, char* argv[])
     // inside the Fetch() function.
     //
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
-    pipeline_stage* DE = new pipeline_stage(params.width);
-    pipeline_stage* RN = new pipeline_stage(params.width);
-    pipeline_stage* RR = new pipeline_stage(params.width);
-    pipeline_stage* DI = new pipeline_stage(params.width);
+    // Pipeline_stage* DE = new Pipeline_stage(params.width);
+    // Pipeline_stage* RN = new Pipeline_stage(params.width);
+    // Pipeline_stage* RR = new Pipeline_stage(params.width);
+    // Pipeline_stage* DI = new Pipeline_stage(params.width);
     //pipeline_stage WB;
+    Simulator sim(params, FP);
+    //Pipeline_stage* DE = new Pipeline_stage(params.width);
     bool test = true;
     do {
         global_counter++;
-        // for (int i = 0; i < params.width; i++) {
-        //     if (fscanf(FP, "%llx %d %d %d %d", &pc, &op_type, &dest, &src1, &src2) != EOF) {
-        //     instruction instr(pc, op_type, dest, src1, src2);
-        //     instr.seq_num = fetch_seq_counter++;
-        //     instr_list.push_back(instr);
-        //     printf("%d\n", instr.seq_num);
-        //     //printf("%llx %d %d %d %d\n", instr.pc, instr.op_type, instr.dest, instr.src1,instr.src2); //Print to check if inputs have been read correctly
-        //     }
-        //     else {
-        //     test = false;
-        // }
-        // }
-        fetch(params,  FP);
+        
+        sim.rename();
+        sim.decode();
+        sim.fetch();
+        
+        // if (!sim.DE->isEmpty()) printf("not empty\n");
+        // else printf("empty\n");
+        // printf("empty: %d\n", sim.DE->isEmpty());
         test = false;
     }
     while (/*Advance_Cycle()*/test);
@@ -104,10 +142,10 @@ int main (int argc, char* argv[])
     // {
     //     printf("%lx %d %d %d %d\n", pc, op_type, dest, src1, src2); //Print to check if inputs have been read correctly
     // }
-    delete(DE);
-    delete(RN);
-    delete(RR);
-    delete(DI);
+    // delete(DE);
+    // delete(RN);
+    // delete(RR);
+    // delete(DI);
     
     return 0;
 }

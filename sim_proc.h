@@ -9,15 +9,15 @@ typedef struct proc_params{
 }proc_params;
 
 // Put additional data structures here as per your requirement
-class pipeline_stage {
+class Pipeline_stage {
     public:
 
     unsigned long int width;
     std::vector<int> instr;
     unsigned long int count = 0;
 
-    pipeline_stage(unsigned long int w) {
-        instr.resize(w);
+    Pipeline_stage(unsigned long int w) {
+        //instr.resize(w);
         width = w;
     }
 
@@ -28,7 +28,28 @@ class pipeline_stage {
     void clear() {
         instr.clear();
     }
+    bool isEmpty() {
+        if (count == 0) return true;
+        else return false;
+    }
 };
+struct rmt_entry {
+    bool valid = false;
+    int rob_tag = -1;
+};
+
+struct rob_entry {
+    bool valid = false;
+    bool ready = false;
+    int dst = -1;
+    int instruction = -1;
+};
+
+class ROB {
+    public:
+
+};
+
 
 typedef struct timing {
     int start = -1;
@@ -75,5 +96,31 @@ typedef struct instruction {
     timing RT;
 }instruction;
 
+class Simulator {
+    public:
+    proc_params params;
+    FILE* FP;
+    Pipeline_stage* DE;
+    Pipeline_stage* RN;
+    Pipeline_stage* RR;
+    Pipeline_stage* DI;
 
+    Simulator(proc_params p, FILE* f) {
+        params = p;
+        FP = f;
+        DE = new Pipeline_stage(params.width);
+        RN = new Pipeline_stage(params.width);
+        RR = new Pipeline_stage(params.width);
+        DI = new Pipeline_stage(params.width);
+    }
+    void fetch();
+    void decode();
+    void rename();
+    void register_read();
+    void dispatch();
+    void issue();
+    void execute();
+    void write_back();
+    void retire();
+};
 #endif
