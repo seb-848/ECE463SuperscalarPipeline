@@ -365,20 +365,20 @@ void Simulator::write_back() {
         instr_list[WB->pipeline_instr[i]].WB.duration++;
     }
 
-    printf("timing done in write back\n");
+    //printf("timing done in write back\n");
     for (int i = 0; i < WB->count; i++) {
         instruction &current_inst = instr_list[WB->pipeline_instr[i]];
         rob_buffer->buffer[current_inst.rob_tag].ready = true;
-        printf("about to enter the editing of issue queue\n");
+        //printf("about to enter the editing of issue queue\n");
         for (int k = 0; k < iq_str->iq_size; k++) {
             //printf("in editing of iq\n");
             if (iq_str->issue_queue[i].global_idx == current_inst.seq_num) {
                 iq_str->issue_queue[i].src1_ready = true;
                 iq_str->issue_queue[i].src2_ready = true;
             }
-            printf("out of editing of iq\n");
+            //printf("out of editing of iq\n");
         }
-        printf("going to next wb or exiting\n");
+        //printf("going to next wb or exiting\n");
         RT->pipeline_instr.push_back(current_inst.seq_num); RT->count++;
     }
 
@@ -440,7 +440,7 @@ int main (int argc, char* argv[])
     do {
         // global_counter++;
         //printf("FE empty: %d\n", sim.FE->isEmpty());
-        //sim.write_back();
+        sim.write_back();
         sim.execute();
         sim.issue();
         sim.dispatch();
