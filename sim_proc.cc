@@ -357,11 +357,11 @@ void Simulator::write_back() {
     if (WB->isEmpty()) return;
     //timing
     if (instr_list[WB->pipeline_instr[0]].WB.start == -1) {
-        for (int i = 0; i < WB->pipeline_instr.size(); i++) {
+        for (int i = 0; i < WB->count; i++) {
             instr_list[WB->pipeline_instr[i]].WB.start = global_counter;
         }
     }
-    for (int i = 0; i < WB->pipeline_instr.size(); i++) {
+    for (int i = 0; i < WB->count; i++) {
         instr_list[WB->pipeline_instr[i]].WB.duration++;
     }
 
@@ -379,14 +379,15 @@ void Simulator::write_back() {
             //printf("out of editing of iq\n");
         }
         //printf("going to next wb or exiting\n");
-        RT->pipeline_instr.push_back(current_inst.seq_num); RT->count++;
+        //RT->pipeline_instr.push_back(current_inst.seq_num); RT->count++;
     }
 
     WB->clear();
 }
 
 void Simulator::retire() {
-
+    if (RT->isEmpty()) return;
+    
 }
 
 int main (int argc, char* argv[])

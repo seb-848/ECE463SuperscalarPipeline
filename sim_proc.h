@@ -219,7 +219,7 @@ typedef struct instruction {
 class Pipeline_stage {
     public:
 
-    unsigned long int width;
+    unsigned long int width = 0;
 
     std::vector<int> pipeline_instr;
      int count = 0;
@@ -253,7 +253,7 @@ struct execute_entry {
 class EX_Stage {
     public:
 
-    unsigned long int width;
+    unsigned long int width = 0;
 
     std::vector<execute_entry> execute_list;
     int count = 0;
