@@ -236,25 +236,21 @@ void Simulator::issue() {
     //if (IS->isEmpty()) IS->pipeline_instr.resize(params.width);
     //printf("still in issue\n");
     //return;
-    //printf("getting the indicies to take out of iq\n");
+    printf("getting the indicies to take out of iq\n");
 
     if (iq_str->valid_entries() == 0) return;
     //printf("valid entries were found\n");
     //printf("getting the indicies to take out of iq\n");
     std::vector <int> indicies = iq_str->oldest_up_to_width_indices(params.width);
-    int i = 1;
-    if (IS->count >= 1) i = IS->count;
-
-    // if (IS->isEmpty()) {
-
+    
     // }
     //printf("still printing from IS\n");
     //printf("IS count: %d, i: %d, indices # of oldest: %d\n",IS->count, i, indicies[0]);
     
-    for (int i = 0; i < indicies[0]; i++) {
+    for (int i = 0; i < indicies.size(); i++) {
         //printf("filling issue\n");
         iq_entry &current_iq_entry = iq_str->issue_queue[indicies[i]];
-        //printf("current entry made\n");
+        printf("current entry made\n");
         //add to issue stage to put into execute list
         IS->pipeline_instr.push_back(current_iq_entry.global_idx);
         //IS->count++;
@@ -376,9 +372,9 @@ void Simulator::write_back() {
         //printf("about to enter the editing of issue queue\n");
         for (int k = 0; k < iq_str->iq_size; k++) {
             //printf("in editing of iq\n");
-            if (iq_str->issue_queue[i].global_idx == current_inst.seq_num) {
-                iq_str->issue_queue[i].src1_ready = true;
-                iq_str->issue_queue[i].src2_ready = true;
+            if (iq_str->issue_queue[k].global_idx == current_inst.seq_num) {
+                iq_str->issue_queue[k].src1_ready = true;
+                iq_str->issue_queue[k].src2_ready = true;
             }
             //printf("out of editing of iq\n");
         }
@@ -478,27 +474,27 @@ int main (int argc, char* argv[])
     // Pipeline_stage* RR = new Pipeline_stage(params.width);
     // Pipeline_stage* DI = new Pipeline_stage(params.width);
     //pipeline_stage WB;
-    Simulator sim(params, FP);
+    Simulator simulation(params, FP);
     //Pipeline_stage* DE = new Pipeline_stage(params.width);
     bool test = true;
     do {
         // global_counter++;
         //printf("FE empty: %d\n", sim.FE->isEmpty());
-        sim.retire();
-        sim.write_back();
-        sim.execute();
-        sim.issue();
-        sim.dispatch();
-        sim.RegRead();
-        sim.rename();
-        sim.decode();
-        sim.fetch();
+        simulation.retire();
+        simulation.write_back();
+        simulation.execute();
+        simulation.issue();
+        simulation.dispatch();
+        simulation.RegRead();
+        simulation.rename();
+        simulation.decode();
+        simulation.fetch();
         
         // if (!sim.DE->isEmpty()) printf("not empty\n");
         // else printf("empty\n");
         // printf("empty: %d\n", sim.DE->isEmpty());
         global_counter++;
-        if (global_counter >= 4) test = false;
+        if (global_counter >= 8) test = false;
         //printf("%d\n", instr_list[0].FE.start);
         //printf("global counter: %llx\n", global_counter);
         //test = false;

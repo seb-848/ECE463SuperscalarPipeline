@@ -33,6 +33,10 @@ struct rob_entry {
     int dst = -1;
     int global_idx = -1;
 };
+struct basic_comp_entry {
+    int global_idx = -1;
+    int iq_idx = -1;
+};
 class IQ {
     public:
     std::vector<iq_entry> issue_queue;
@@ -78,6 +82,7 @@ class IQ {
 
    std:: vector<int> oldest_up_to_width_indices(unsigned long int w) {
         std::vector <int> sorted_iq;
+        //std::vector <basic_comp_entry> track;
         for (int i = 0; i < count; i++) {
             if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
                 sorted_iq.push_back(issue_queue[i].global_idx);
@@ -88,6 +93,15 @@ class IQ {
 
         while (sorted_iq.size() > w) {
             sorted_iq.pop_back();
+        }
+
+        for (int i = 0; i < sorted_iq.size(); i++) {
+            for (int k = 0; k < issue_queue.size(); k++) {
+                if (sorted_iq[i] == issue_queue[k].global_idx) {
+                    sorted_iq[i] = k;
+                    break;
+                }
+            }
         }
 
         return sorted_iq;
@@ -370,7 +384,7 @@ class Simulator {
     EX_Stage* EX;
     Pipeline_stage* WB;
     Pipeline_stage* RT;
-    rmt_entry rmt[67];
+    std::vector<rmt_entry> rmt;
     ROB* rob_buffer;
     IQ* iq_str;
 
@@ -388,7 +402,7 @@ class Simulator {
         RT = new Pipeline_stage(params.width);
         rob_buffer = new ROB(params.rob_size);
         iq_str = new IQ(params.iq_size);
-
+        rmt.resize(67);
         for (int i = 0; i < 67; i++) {
             rmt[i].rob_tag = -1;
             rmt[i].valid = false;
