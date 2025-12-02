@@ -120,18 +120,20 @@ void Simulator::rename() {
     if (!RR->isEmpty() || !rob_buffer->available(params.width)) return;
     for (int i = 0; i < RN->pipeline_instr.size(); i++) {
         instruction &current_inst = instr_list[RN->pipeline_instr[i]];
-
+        
         // put into rob and get rob tag
         current_inst.rob_tag = rob_buffer->allocate(RN->pipeline_instr[i], current_inst.dest);
 
         // dont think we need the global sequential index
 //printf("in rename loop\n");
         // getting value from arf
+        //printf("rmt src1 check: %d\n",rmt[current_inst.src1].valid);
         if (current_inst.src1 == -1 || !rmt[current_inst.src1].valid) {
             current_inst.src1_tag = -1;
             current_inst.src1_ready = true;
         }
         else {
+            //printf("THERE is rmt and it is valid\n");
             current_inst.src1_tag = rmt[current_inst.src1].rob_tag;
             current_inst.src1_ready = rob_buffer->buffer[current_inst.src1_tag].ready;
         }
@@ -145,8 +147,12 @@ void Simulator::rename() {
             current_inst.src2_ready = rob_buffer->buffer[current_inst.src2_tag].ready;
         }
         
-        rmt[current_inst.dest].valid = true;
-        rmt[current_inst.dest].rob_tag = current_inst.rob_tag;
+        //printf("checking dest isnt seg\n");
+        if (current_inst.dest != -1) {
+            rmt[current_inst.dest].valid = true;
+            rmt[current_inst.dest].rob_tag = current_inst.rob_tag;
+        }
+        
 
 //printf("dest fixed\n");
         //RN->fill_next_stage(RR);
@@ -422,6 +428,7 @@ void Simulator::retire() {
         }
     }
     for (int i = 0; i < RT->count; i++) {
+        if (!instr_list[RT->pipeline_instr[i]].retired) continue;
         instr_list[RT->pipeline_instr[i]].RT.duration++;
     }
     
@@ -436,6 +443,7 @@ void Simulator::retire() {
                 int rmt_index = rob_buffer->buffer[rob_buffer->head].dst;
                 rob_buffer->buffer[rob_buffer->head].valid = false;
                 rob_buffer->buffer[rob_buffer->head].ready = false;
+                instr_list[rob_buffer->buffer[rob_buffer->head].global_idx].retired = true;
                 
                 if (rmt_index != -1) {
                     iq_str->issue_queue[rmt_index].valid = false;
@@ -446,10 +454,11 @@ void Simulator::retire() {
                     iq_str->issue_queue[rmt_index].src1_tag = -1;
                     iq_str->issue_queue[rmt_index].src2_tag = -1;
                 }
-                RT->pipeline_instr.erase(RT->pipeline_instr.begin() + RT->pipeline_instr[rob_buffer->buffer[rob_buffer->head].global_idx]);
+                //RT->pipeline_instr.erase(RT->pipeline_instr.begin() + RT->pipeline_instr[rob_buffer->buffer[rob_buffer->head].global_idx]);
                 rob_buffer->buffer[rob_buffer->head].dst = -1;
                 rob_buffer->buffer[rob_buffer->head].global_idx = -1;
                 rob_buffer->head = (rob_buffer->head + 1) % (int) params.rob_size;
+
             }
             else break;
         }
@@ -524,7 +533,7 @@ int main (int argc, char* argv[])
         // else printf("empty\n");
         // printf("empty: %d\n", sim.DE->isEmpty());
         global_counter++;
-        if (global_counter >= 15) test = false;
+        if (global_counter >= 100) test = false;
         //printf("%d\n", instr_list[0].FE.start);
         //printf("global counter: %llx\n", global_counter);
         //test = false;
