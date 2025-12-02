@@ -35,7 +35,7 @@ std::vector<instruction> instr_list; //global  instruction list
 // }
 
 void Pipeline_stage::fill_next_stage (Pipeline_stage* stage) {
-        for (int i = 0; i < this->pipeline_instr.size(); i++) {
+        for (int i = 0; i < this->count; i++) {
             stage->pipeline_instr.push_back(this->pipeline_instr[i]); stage->count++;
             //stage->pipeline_instr
         }
@@ -45,7 +45,7 @@ void Pipeline_stage::fill_next_stage (Pipeline_stage* stage) {
     }
 
 void Simulator::fetch() {
-    printf("in fetch\n");
+    //printf("in fetch\n");
     
     if (FE->isEmpty()) {
         uint64_t pc;
@@ -61,6 +61,8 @@ void Simulator::fetch() {
                 instr_list[fetch_seq_counter - 1].FE.duration++;
                 //printf("start for %d : %d\n",i, instr.FE.start);
                 FE->pipeline_instr.push_back(instr.seq_num); FE->count++;
+                //FE->pipeline_instr[i] = instr.seq_num; FE->count++;
+                //printf("FETCH: %d\n", FE->pipeline_instr[i]);
 
                 // DE->pipeline_instr.push_back(instr.seq_num); DE->count++;
                 // FE->clear();
@@ -71,7 +73,7 @@ void Simulator::fetch() {
 
     if (!DE->isEmpty()) {
         //FE->increment_duration(instr_list);
-        for (int i = 0; i < FE->pipeline_instr.size(); i++) {
+        for (int i = 0; i < FE->count; i++) {
             instr_list[FE->pipeline_instr[i]].FE.duration++;
         }
         return;
@@ -82,12 +84,12 @@ void Simulator::fetch() {
 }
 
 void Simulator::decode() {
-    printf("in decode\n");
+    //printf("in decode\n");
     if (DE->isEmpty()) return;
     
     // timing
     if (instr_list[DE->pipeline_instr[0]].DE.start == -1) {
-        for (int i = 0; i < DE->pipeline_instr.size(); i++) {
+        for (int i = 0; i < DE->count; i++) {
             instr_list[DE->pipeline_instr[i]].DE.start = global_counter;
         }
     }
@@ -100,7 +102,7 @@ void Simulator::decode() {
 }
 
 void Simulator::rename() {
-    printf("in rename\n");
+    //printf("in rename\n");
     if (RN->isEmpty()) return;
 
     // timing
@@ -154,7 +156,7 @@ void Simulator::rename() {
 }
 
 void Simulator::RegRead() {
-    printf("in regread\n");
+    //printf("in regread\n");
     if (RR->isEmpty()) return;
     // timing
     if (instr_list[RR->pipeline_instr[0]].RR.start == -1) {
@@ -172,7 +174,7 @@ void Simulator::RegRead() {
 }
 
 void Simulator::dispatch() {
-    printf("in dispatch\n");
+    //printf("in dispatch\n");
     if (DI->isEmpty()) return;
 
     //timing
@@ -190,7 +192,7 @@ void Simulator::dispatch() {
     //get available spot, use seq_num for queue function
     int* index_to_fill = iq_str->available_indices(params.width);
     // fill issue queue
-    for (int i = 0; i < params.width; i++) {
+    for (int i = 0; i < DI->count; i++) {
         instruction &current_inst = instr_list[DI->pipeline_instr[i]];
         iq_str->issue_queue[index_to_fill[i]].valid = true;
         iq_str->issue_queue[index_to_fill[i]].rob_tag = current_inst.rob_tag;
@@ -200,20 +202,24 @@ void Simulator::dispatch() {
         iq_str->issue_queue[index_to_fill[i]].src2_tag = current_inst.src2_tag;
         iq_str->issue_queue[index_to_fill[i]].global_idx = DI->pipeline_instr[i];
         iq_str->count++;
-        printf("filling iq\n");
+        //printf("filling iq\n");
     }
-
+    // for (int i = 0; i < iq_str->issue_queue.size(); i++) {
+    //     printf("%d: valid: %d\n",i, iq_str->issue_queue[i].valid);
+    //     printf("%d: src1 ready: %d\n",i,iq_str->issue_queue[i].src1_ready);
+    //     printf("%d: src2 ready: %d\n",i,iq_str->issue_queue[i].src2_ready);
+    // }
     //DI->fill_next_stage(IS);
-    printf("clearing  dispatch\n");
+    //printf("clearing  dispatch\n");
     DI->clear();
     return;
 }
 
 void Simulator::issue() {
-    printf("in issue\n");
+    //printf("in issue\n");
     if (iq_str->isEmpty()) return;
-
-    //timing
+    //printf("ISSUE IS NOT EMPTY\n");
+    //timing including issue queue
     for (int i = 0; i < params.iq_size; i++) {
         if (iq_str->issue_queue[i].valid) {
             if (instr_list[iq_str->issue_queue[i].global_idx].IS.start == -1) {
@@ -224,16 +230,33 @@ void Simulator::issue() {
             }
         }
     }
-    return;
-    //printf("getting the indicies to take out of iq\n");
-    if (iq_str->valid_entries() == 0) return;
-    printf("getting the indicies to take out of iq\n");
-    int* indicies = iq_str->oldest_up_to_width_indices(params.width);
 
-    for (int i = 1; i < indicies[0]; i++) {
-        iq_entry &current_iq_entry = iq_str->issue_queue[indicies[i]];
+    //if (IS->isEmpty()) IS->pipeline_instr.resize(params.width);
+    //printf("still in issue\n");
+    //return;
+    //printf("getting the indicies to take out of iq\n");
+
+    if (iq_str->valid_entries() == 0) return;
+    //printf("valid entries were found\n");
+    //printf("getting the indicies to take out of iq\n");
+    int* indicies = iq_str->oldest_up_to_width_indices(params.width);
+    int i = 1;
+    if (IS->count >= 1) i = IS->count;
+
+    // if (IS->isEmpty()) {
+
+    // }
+    //printf("still printing from IS\n");
+    //printf("IS count: %d, i: %d, indices # of oldest: %d\n",IS->count, i, indicies[0]);
+    
+    for (int a = i; a < indicies[0]; a++) {
+        //printf("filling issue\n");
+        iq_entry &current_iq_entry = iq_str->issue_queue[indicies[a]];
+        //printf("current entry made\n");
         //add to issue stage to put into execute list
-        IS->pipeline_instr[i-1] = current_iq_entry.global_idx;
+        IS->pipeline_instr.push_back(current_iq_entry.global_idx);
+        //IS->count++;
+        //printf("entry transferred\n");
         //remove from iq
         current_iq_entry.rob_tag = -1;
         current_iq_entry.valid = false;
@@ -243,9 +266,119 @@ void Simulator::issue() {
         current_iq_entry.src2_tag = -1;
         current_iq_entry.global_idx = -1;
         iq_str->count--;
+        IS->count++;
+        //printf("issue being filled\n");
     }
-    
+
+    //printf("done filling issue\n");
+    //if (EX->space_available(IS->count)) return;
+    // put IS into EX
+    //printf("IS->COUNT: %d\n", IS->count);
+    for (int i = 0; i < IS->count; i++) {
+        printf("ex is being filled\n");
+        execute_entry ex_list_entry;
+        ex_list_entry.global_idx = IS->pipeline_instr[i];
+        switch(instr_list[IS->pipeline_instr[i]].op_type) {
+            case 0:
+            ex_list_entry.time_left = 1;
+            break;
+            case 1:
+            ex_list_entry.time_left = 2;
+            break;
+            case 2:
+            ex_list_entry.time_left = 5;
+            break;
+            default:
+            break;
+        }
+        EX->execute_list.push_back(ex_list_entry);
+        EX->count++;
+        //stage->pipeline_instr
+    }
+    IS->count = 0;
+    IS->clear();
+
+
+    // for (int i = IS->count - EX->execute_list.size(); i < EX->execute_list.size(); i++) {
+    //     if (EX->execute_list[i].)
+    // }
+
+
+    //IS->fill_next_stage(EX);
     return;
+}
+
+void Simulator::execute() {
+    printf("in execute\n");
+    if (EX->isEmpty()) return;
+    //printf("ex not empty\n");
+    //timing
+    if (instr_list[EX->execute_list[0].global_idx].EX.start == -1) {
+        for (int i = 0; i < EX->execute_list.size(); i++) {
+            instr_list[EX->execute_list[i].global_idx].EX.start = global_counter;
+        }
+    }
+    for (int i = 0; i < EX->execute_list.size(); i++) {
+        instr_list[EX->execute_list[i].global_idx].EX.duration++;
+        EX->execute_list[i].time_left--;
+    }
+
+    std::vector <int> executed_inst;
+    int execute_count = 0;
+
+    printf("ex is about to check to move to wb\n");
+    // check for instructions done and add to WB
+    for (int i = 0; i < EX->execute_list.size(); i++) {
+        printf("about to check for timing\n");
+        if (EX->execute_list[i].time_left == 0) {
+            printf("checking for timing\n");
+            WB->pipeline_instr.push_back(EX->execute_list[i].global_idx); WB->count++;//[WB->count++] = EX->execute_list[i].global_idx;
+            printf("transfered\n");
+            //EX->execute_list.erase(EX->execute_list.begin() + i);
+            //EX->count--;
+            executed_inst.push_back(i);
+            execute_count++;
+            printf("current loop done\n");
+        }
+    }
+
+    for (int i = 0; i < execute_count; i++) {
+        EX->execute_list.erase(EX->execute_list.begin() + executed_inst[i]);
+    }
+    execute_count = 0;
+    return;
+}
+
+void Simulator::write_back() {
+    if (WB->isEmpty()) return;
+    //timing
+    if (instr_list[WB->pipeline_instr[0]].WB.start == -1) {
+        for (int i = 0; i < WB->pipeline_instr.size(); i++) {
+            instr_list[WB->pipeline_instr[i]].WB.start = global_counter;
+        }
+    }
+    for (int i = 0; i < WB->pipeline_instr.size(); i++) {
+        instr_list[WB->pipeline_instr[i]].WB.duration++;
+    }
+
+    printf("timing done in write back\n");
+    for (int i = 0; i < WB->count; i++) {
+        instruction &current_inst = instr_list[WB->pipeline_instr[i]];
+        rob_buffer->buffer[current_inst.rob_tag].ready = true;
+        for (int k = 0; k < iq_str->issue_queue.size(); i++) {
+            if (iq_str->issue_queue[i].global_idx == current_inst.seq_num) {
+                iq_str->issue_queue[i].src1_ready = true;
+                iq_str->issue_queue[i].src2_ready = true;
+            }
+        }
+        RT->pipeline_instr.push_back(current_inst.seq_num); RT->count++;
+    }
+
+    WB->clear();
+}
+
+void Simulator::retire() {
+
 }
 
 int main (int argc, char* argv[])
@@ -299,7 +432,9 @@ int main (int argc, char* argv[])
     do {
         // global_counter++;
         //printf("FE empty: %d\n", sim.FE->isEmpty());
-        //sim.issue();
+        sim.write_back();
+        sim.execute();
+        sim.issue();
         sim.dispatch();
         sim.RegRead();
         sim.rename();
@@ -311,10 +446,10 @@ int main (int argc, char* argv[])
         // printf("empty: %d\n", sim.DE->isEmpty());
         global_counter++;
         //printf("%d\n", instr_list[0].FE.start);
-        printf("global counter: %llx\n", global_counter);
+        //printf("global counter: %llx\n", global_counter);
         test = false;
     }
-    while (/*Advance_Cycle()*/global_counter < 5);
+    while (/*Advance_Cycle()*/global_counter < 10);
 
     for (int i = 0; i < instr_list.size(); i++) {
         printf("%d fu{%d} src{%d,%d} dst{%d} ", i, instr_list[i].op_type, instr_list[i].src1, instr_list[i].src2, instr_list[i].dest);

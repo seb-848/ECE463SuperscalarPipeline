@@ -2,6 +2,8 @@
 #define SIM_PROC_H
 #include <vector>
 
+int const EX_LIST_LIMIT_FACTOR = 5;
+
 typedef struct proc_params{
     unsigned long int rob_size;
     unsigned long int iq_size;
@@ -73,8 +75,9 @@ class IQ {
     }
 
     int* oldest_up_to_width_indices(unsigned long int w) {
+        //printf("IN FUNC\n");
         int min = issue_queue[0].global_idx;
-        int count = 0;
+        int count = 1;
         int entries_taken = 0;
         int take_num = w;
         
@@ -92,33 +95,33 @@ class IQ {
             indices[i] = -1;
         }
         indices[0] = take_num + 1;
-        
-        while(count < take_num) {
-            for (int i = 1; i < iq_size; i++) {
+        // printf("GETTING OLDEST INST\n");
+        // printf("first index for finding oldest in func %d\n", indices[0]);
+        while(count <= take_num) {
+            for (int i = 0; i < iq_size; i++) {
                 if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
-                    if (min > issue_queue[i].global_idx) {
+                    //printf("valid entry found, seq: %d\n", issue_queue[i].global_idx);
+                    if (min >= issue_queue[i].global_idx) {
                         for (int k = 1; k < indices[0]; k++) {
                             if (indices[k] == issue_queue[i].global_idx && indices[k] != -1) {
                                 used = true;
+                                //printf("NOT UNIQUE\n");
                                 break;
                             }
                         }
                         if (!used)  {
                             min = issue_queue[i].global_idx;
+                            used = false;
+                            indices[count++] = min;
+                            min++;
+                            
+                            //printf("REPLACING MIN\n");
+                            break;
                         }
-                        used = false;
                     }
                 }
             }
-            indices[count++] = min;
         }
-        // for (int i = 0; i < iq_size; i++) {
-        //     if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
-        //         if (max < issue_queue[i].global_idx) {
-        //             max = issue_queue[i].global_idx;
-        //         }
-        //     }
-        // }
         return indices;
     }
 };
@@ -212,18 +215,20 @@ typedef struct instruction {
     timing RT;
 }instruction;
 
+//template <typename T>
 class Pipeline_stage {
     public:
 
     unsigned long int width;
+
     std::vector<int> pipeline_instr;
      int count = 0;
 
     Pipeline_stage(unsigned long int w) {
-        //instr.resize(w);
+        //pipeline_instr.resize(w);
         width = w;
     }
-    void increment_duration (std::vector<instruction> &list, timing timer);
+    //void increment_duration (std::vector<instruction> &list, timing timer);
 
     void fill_next_stage (Pipeline_stage* stage);
 
@@ -233,6 +238,41 @@ class Pipeline_stage {
 
     void clear() {
         pipeline_instr.clear();
+        count = 0;
+    }
+    bool isEmpty() {
+        if (count == 0) return true;
+        else return false;
+    }
+};
+
+struct execute_entry {
+    int time_left = -1;
+    int global_idx = -1;
+};
+class EX_Stage {
+    public:
+
+    unsigned long int width;
+
+    std::vector<execute_entry> execute_list;
+    int count = 0;
+
+    EX_Stage(unsigned long int w) {
+        //instr.resize(w);
+        width = w;
+    }
+
+    bool space_available(int bundle_size) {
+        if ((execute_list.size() + bundle_size) < (width * EX_LIST_LIMIT_FACTOR)) return true;
+        else return false;
+    }
+    bool full() {
+        return count == width;
+    }
+
+    void clear() {
+        execute_list.clear();
         count = 0;
     }
     bool isEmpty() {
@@ -251,7 +291,7 @@ class Simulator {
     Pipeline_stage* RR;
     Pipeline_stage* DI;
     Pipeline_stage* IS;
-    Pipeline_stage* EX;
+    EX_Stage* EX;
     Pipeline_stage* WB;
     Pipeline_stage* RT;
     rmt_entry rmt[67];
@@ -267,7 +307,7 @@ class Simulator {
         RR = new Pipeline_stage(params.width);
         DI = new Pipeline_stage(params.width);
         IS = new Pipeline_stage(params.width);
-        EX = new Pipeline_stage(params.width);
+        EX = new EX_Stage(params.width);
         WB = new Pipeline_stage(params.width);
         RT = new Pipeline_stage(params.width);
         rob_buffer = new ROB(params.rob_size);
