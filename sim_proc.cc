@@ -326,19 +326,20 @@ void Simulator::execute() {
     std::vector <int> executed_inst;
     int execute_count = 0;
 
-    printf("ex is about to check to move to wb\n");
+    //printf("ex is about to check to move to wb\n");
     // check for instructions done and add to WB
     for (int i = 0; i < EX->execute_list.size(); i++) {
-        printf("about to check for timing\n");
+        //printf("about to check for timing\n");
         if (EX->execute_list[i].time_left == 0) {
-            printf("checking for timing\n");
-            WB->pipeline_instr.push_back(EX->execute_list[i].global_idx); WB->count++;//[WB->count++] = EX->execute_list[i].global_idx;
-            printf("transfered\n");
+            //printf("checking for timing\n");
+            WB->pipeline_instr.push_back(EX->execute_list[i].global_idx);
+            WB->count++;//[WB->count++] = EX->execute_list[i].global_idx;
+            //printf("transfered\n");
             //EX->execute_list.erase(EX->execute_list.begin() + i);
             //EX->count--;
             executed_inst.push_back(i);
             execute_count++;
-            printf("current loop done\n");
+            //printf("current loop done\n");
         }
     }
 
@@ -365,12 +366,16 @@ void Simulator::write_back() {
     for (int i = 0; i < WB->count; i++) {
         instruction &current_inst = instr_list[WB->pipeline_instr[i]];
         rob_buffer->buffer[current_inst.rob_tag].ready = true;
-        for (int k = 0; k < iq_str->issue_queue.size(); i++) {
+        printf("about to enter the editing of issue queue\n");
+        for (int k = 0; k < iq_str->iq_size; k++) {
+            //printf("in editing of iq\n");
             if (iq_str->issue_queue[i].global_idx == current_inst.seq_num) {
                 iq_str->issue_queue[i].src1_ready = true;
                 iq_str->issue_queue[i].src2_ready = true;
             }
+            printf("out of editing of iq\n");
         }
+        printf("going to next wb or exiting\n");
         RT->pipeline_instr.push_back(current_inst.seq_num); RT->count++;
     }
 
