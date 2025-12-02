@@ -14,6 +14,9 @@ struct iq_entry {
     int rob_tag = -1;
     bool src1_ready = false;
     bool src2_ready = false;
+    int src1_tag = -1;
+    int src2_tag = -1;
+    int global_idx = -1;
 };
 
 struct rmt_entry {
@@ -39,8 +42,24 @@ class IQ {
         count = 0;
     }
 
-    bool available(unsigned long w) {
+    bool available(unsigned long int w) {
         return (iq_size - count) >= w;
+    }
+
+    int* available_indices(unsigned long int w) {
+        int* indices = new int[w];
+        int spaces = 0;
+        for (int i = 0; i < iq_size && spaces < w; i++) {
+            if (!issue_queue[i].valid) {
+                indices[spaces++] = i;
+            }
+        }
+        return indices;
+    }
+
+    bool isEmpty() {
+        if (count == 0) return true;
+        else return false;
     }
 };
 
@@ -172,6 +191,9 @@ class Simulator {
     Pipeline_stage* RR;
     Pipeline_stage* DI;
     Pipeline_stage* IS;
+    Pipeline_stage* EX;
+    Pipeline_stage* WB;
+    Pipeline_stage* RT;
     rmt_entry rmt[67];
     ROB* rob_buffer;
     IQ* iq_str;
@@ -185,6 +207,9 @@ class Simulator {
         RR = new Pipeline_stage(params.width);
         DI = new Pipeline_stage(params.width);
         IS = new Pipeline_stage(params.width);
+        EX = new Pipeline_stage(params.width);
+        WB = new Pipeline_stage(params.width);
+        RT = new Pipeline_stage(params.width);
         rob_buffer = new ROB(params.rob_size);
         iq_str = new IQ(params.iq_size);
 
