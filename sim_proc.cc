@@ -204,11 +204,13 @@ void Simulator::dispatch() {
     }
 
     //DI->fill_next_stage(IS);
+    printf("clearing  dispatch\n");
     DI->clear();
     return;
 }
 
 void Simulator::issue() {
+    printf("in issue\n");
     if (iq_str->isEmpty()) return;
 
     //timing
@@ -221,6 +223,26 @@ void Simulator::issue() {
                 instr_list[iq_str->issue_queue[i].global_idx].IS.duration++;
             }
         }
+    }
+    return;
+    //printf("getting the indicies to take out of iq\n");
+    if (iq_str->valid_entries() == 0) return;
+    printf("getting the indicies to take out of iq\n");
+    int* indicies = iq_str->oldest_up_to_width_indices(params.width);
+
+    for (int i = 1; i < indicies[0]; i++) {
+        iq_entry &current_iq_entry = iq_str->issue_queue[indicies[i]];
+        //add to issue stage to put into execute list
+        IS->pipeline_instr[i-1] = current_iq_entry.global_idx;
+        //remove from iq
+        current_iq_entry.rob_tag = -1;
+        current_iq_entry.valid = false;
+        current_iq_entry.src1_ready = false;
+        current_iq_entry.src1_tag = -1;
+        current_iq_entry.src2_ready = false;
+        current_iq_entry.src2_tag = -1;
+        current_iq_entry.global_idx = -1;
+        iq_str->count--;
     }
     
     return;
@@ -277,7 +299,7 @@ int main (int argc, char* argv[])
     do {
         // global_counter++;
         //printf("FE empty: %d\n", sim.FE->isEmpty());
-        sim.issue();
+        //sim.issue();
         sim.dispatch();
         sim.RegRead();
         sim.rename();
@@ -289,10 +311,10 @@ int main (int argc, char* argv[])
         // printf("empty: %d\n", sim.DE->isEmpty());
         global_counter++;
         //printf("%d\n", instr_list[0].FE.start);
-        //printf("global counter: %llx\n", global_counter);
+        printf("global counter: %llx\n", global_counter);
         test = false;
     }
-    while (/*Advance_Cycle()*/global_counter < 8);
+    while (/*Advance_Cycle()*/global_counter < 5);
 
     for (int i = 0; i < instr_list.size(); i++) {
         printf("%d fu{%d} src{%d,%d} dst{%d} ", i, instr_list[i].op_type, instr_list[i].src1, instr_list[i].src2, instr_list[i].dest);

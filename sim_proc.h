@@ -61,6 +61,66 @@ class IQ {
         if (count == 0) return true;
         else return false;
     }
+
+    int valid_entries() {
+        int count = 0;
+        for (int i = 0; i < iq_size; i++) {
+            if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    int* oldest_up_to_width_indices(unsigned long int w) {
+        int min = issue_queue[0].global_idx;
+        int count = 0;
+        int entries_taken = 0;
+        int take_num = w;
+        
+        bool used = false;
+
+        for (int i = 0; i < iq_size; i++) {
+            if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
+                entries_taken++;
+            }
+        }
+
+        if (entries_taken < w) take_num = entries_taken;
+        int* indices = new int[take_num + 1]();
+        for (int i = 1; i < take_num + 1; i++) {
+            indices[i] = -1;
+        }
+        indices[0] = take_num + 1;
+        
+        while(count < take_num) {
+            for (int i = 1; i < iq_size; i++) {
+                if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
+                    if (min > issue_queue[i].global_idx) {
+                        for (int k = 1; k < indices[0]; k++) {
+                            if (indices[k] == issue_queue[i].global_idx && indices[k] != -1) {
+                                used = true;
+                                break;
+                            }
+                        }
+                        if (!used)  {
+                            min = issue_queue[i].global_idx;
+                        }
+                        used = false;
+                    }
+                }
+            }
+            indices[count++] = min;
+        }
+        // for (int i = 0; i < iq_size; i++) {
+        //     if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
+        //         if (max < issue_queue[i].global_idx) {
+        //             max = issue_queue[i].global_idx;
+        //         }
+        //     }
+        // }
+        return indices;
+    }
 };
 
 class ROB {
