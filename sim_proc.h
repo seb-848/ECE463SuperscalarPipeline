@@ -35,8 +35,8 @@ struct rob_entry {
 class IQ {
     public:
     std::vector<iq_entry> issue_queue;
-    unsigned long int count;
-    unsigned long int iq_size;
+    unsigned long int count = 0;;
+    unsigned long int iq_size = 0;;
 
     IQ(unsigned long int iq_s) {
         iq_size = iq_s;
@@ -129,8 +129,8 @@ class IQ {
 class ROB {
     public:
     std::vector<rob_entry> buffer;
-    int head;
-    int tail;
+    int head = 0;
+    int tail = 0;
     unsigned long int count;
     unsigned long int rob_size;
 

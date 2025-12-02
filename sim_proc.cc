@@ -309,7 +309,7 @@ void Simulator::issue() {
 }
 
 void Simulator::execute() {
-    printf("in execute\n");
+    //printf("in execute\n");
     if (EX->isEmpty()) return;
     //printf("ex not empty\n");
     //timing
@@ -343,7 +343,10 @@ void Simulator::execute() {
         }
     }
 
+    //printf("transfer all done\n");
+    
     for (int i = 0; i < execute_count; i++) {
+        //printf("erasing\n");
         EX->execute_list.erase(EX->execute_list.begin() + executed_inst[i]);
     }
     execute_count = 0;
@@ -404,10 +407,10 @@ int main (int argc, char* argv[])
     params.iq_size      = strtoul(argv[2], NULL, 10);
     params.width        = strtoul(argv[3], NULL, 10);
     trace_file          = argv[4];
-    printf("rob_size:%lu "
-            "iq_size:%lu "
-            "width:%lu "
-            "tracefile:%s\n", params.rob_size, params.iq_size, params.width, trace_file);
+    // printf("rob_size:%lu "
+    //         "iq_size:%lu "
+    //         "width:%lu "
+    //         "tracefile:%s\n", params.rob_size, params.iq_size, params.width, trace_file);
     // Open trace_file in read mode
     FP = fopen(trace_file, "r");
     if(FP == NULL)
