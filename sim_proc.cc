@@ -438,7 +438,7 @@ int main (int argc, char* argv[])
         // global_counter++;
         //printf("FE empty: %d\n", sim.FE->isEmpty());
         //sim.write_back();
-        sim.execute();
+        //sim.execute();
         sim.issue();
         sim.dispatch();
         sim.RegRead();
