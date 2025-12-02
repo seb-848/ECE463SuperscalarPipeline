@@ -275,7 +275,7 @@ void Simulator::issue() {
     // put IS into EX
     //printf("IS->COUNT: %d\n", IS->count);
     for (int i = 0; i < IS->count; i++) {
-        printf("ex is being filled\n");
+        //printf("ex is being filled\n");
         execute_entry ex_list_entry;
         ex_list_entry.global_idx = IS->pipeline_instr[i];
         switch(instr_list[IS->pipeline_instr[i]].op_type) {
@@ -439,7 +439,7 @@ int main (int argc, char* argv[])
         //printf("FE empty: %d\n", sim.FE->isEmpty());
         //sim.write_back();
         //sim.execute();
-        //sim.issue();
+        sim.issue();
         sim.dispatch();
         sim.RegRead();
         sim.rename();
