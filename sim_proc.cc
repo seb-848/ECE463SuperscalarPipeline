@@ -191,17 +191,40 @@ void Simulator::dispatch() {
 
     if (!IS->isEmpty() || !iq_str->available(params.width)) return;
     //get available spot, use seq_num for queue function
-    std::vector<int> index_to_fill = iq_str->available_indices(params.width);
+    //std::vector<int> index_to_fill = iq_str->available_indices(params.width);
     // fill issue queue
-    for (int i = 0; i < DI->count; i++) {
+    // printf("index to fill %d\n", index_to_fill.size());
+    // for (int i = 0; i < index_to_fill.size(); i++) {
+    //     printf("index to size: %d, %d\n",i, index_to_fill[i]);
+    // }
+    // for (int i = 0; i < index_to_fill.size(); i++) {
+    //     instruction &current_inst = instr_list[DI->pipeline_instr[i]];
+    //     iq_str->issue_queue[index_to_fill[i]].valid = true;
+    //     iq_str->issue_queue[index_to_fill[i]].rob_tag = current_inst.rob_tag;
+    //     iq_str->issue_queue[index_to_fill[i]].src1_ready = current_inst.src1_ready;
+    //     iq_str->issue_queue[index_to_fill[i]].src1_tag = current_inst.src1_tag;
+    //     iq_str->issue_queue[index_to_fill[i]].src2_ready = current_inst.src2_ready;
+    //     iq_str->issue_queue[index_to_fill[i]].src2_tag = current_inst.src2_tag;
+    //     iq_str->issue_queue[index_to_fill[i]].global_idx = DI->pipeline_instr[i];
+    //     iq_str->count++;
+    //     //printf("filling iq\n");
+    // }
+    int filling_index = 0;
+    for (int i = 0; i < (int)DI->pipeline_instr.size(); i++) {
         instruction &current_inst = instr_list[DI->pipeline_instr[i]];
-        iq_str->issue_queue[index_to_fill[i]].valid = true;
-        iq_str->issue_queue[index_to_fill[i]].rob_tag = current_inst.rob_tag;
-        iq_str->issue_queue[index_to_fill[i]].src1_ready = current_inst.src1_ready;
-        iq_str->issue_queue[index_to_fill[i]].src1_tag = current_inst.src1_tag;
-        iq_str->issue_queue[index_to_fill[i]].src2_ready = current_inst.src2_ready;
-        iq_str->issue_queue[index_to_fill[i]].src2_tag = current_inst.src2_tag;
-        iq_str->issue_queue[index_to_fill[i]].global_idx = DI->pipeline_instr[i];
+        for (int k = 0; k < (int)iq_str->issue_queue.size(); k++) {
+            if (!iq_str->issue_queue[k].valid) {
+                filling_index = k;
+                break;
+            }
+        }
+        iq_str->issue_queue[filling_index].valid = true;
+        iq_str->issue_queue[filling_index].rob_tag = current_inst.rob_tag;
+        iq_str->issue_queue[filling_index].src1_ready = current_inst.src1_ready;
+        iq_str->issue_queue[filling_index].src1_tag = current_inst.src1_tag;
+        iq_str->issue_queue[filling_index].src2_ready = current_inst.src2_ready;
+        iq_str->issue_queue[filling_index].src2_tag = current_inst.src2_tag;
+        iq_str->issue_queue[filling_index].global_idx = DI->pipeline_instr[i];
         iq_str->count++;
         //printf("filling iq\n");
     }
@@ -227,16 +250,14 @@ void Simulator::issue() {
             if (instr_list[iq_str->issue_queue[i].global_idx].IS.start == -1) {
                 instr_list[iq_str->issue_queue[i].global_idx].IS.start = global_counter;
             }
-            else {
                 instr_list[iq_str->issue_queue[i].global_idx].IS.duration++;
-            }
         }
     }
 
     //if (IS->isEmpty()) IS->pipeline_instr.resize(params.width);
     //printf("still in issue\n");
     //return;
-    printf("getting the indicies to take out of iq\n");
+    //printf("getting the indicies to take out of iq\n");
 
     if (iq_str->valid_entries() == 0) return;
     //printf("valid entries were found\n");
@@ -250,7 +271,7 @@ void Simulator::issue() {
     for (int i = 0; i < indicies.size(); i++) {
         //printf("filling issue\n");
         iq_entry &current_iq_entry = iq_str->issue_queue[indicies[i]];
-        printf("current entry made\n");
+        //printf("current entry made\n");
         //add to issue stage to put into execute list
         IS->pipeline_instr.push_back(current_iq_entry.global_idx);
         //IS->count++;
@@ -267,6 +288,10 @@ void Simulator::issue() {
         IS->count++;
         //printf("issue being filled\n");
     }
+
+    // for (int i = 0; i < indicies.size(); i++) {
+
+    // }
 
     //printf("done filling issue\n");
     //if (EX->space_available(IS->count)) return;
@@ -378,8 +403,8 @@ void Simulator::write_back() {
             }
             //printf("out of editing of iq\n");
         }
-        //printf("going to next wb or exiting\n");
-        //RT->pipeline_instr.push_back(current_inst.seq_num); RT->count++;
+        printf("going to next wb or exiting\n");
+        RT->pipeline_instr.push_back(current_inst.seq_num); RT->count++;
     }
 
     WB->clear();
@@ -387,6 +412,7 @@ void Simulator::write_back() {
 }
 
 void Simulator::retire() {
+    if (!rob_buffer->buffer[rob_buffer->head].ready) return;
     if (RT->isEmpty()) return;
     int retired_inst_count = 0;
     // timing
@@ -407,19 +433,23 @@ void Simulator::retire() {
         // }
         for (int i = 0; i < (int)params.width; i++) {//rob_buffer->rob_size; i++) {
             if (rob_buffer->buffer[rob_buffer->head].valid && rob_buffer->buffer[rob_buffer->head].ready) {
+                int rmt_index = rob_buffer->buffer[rob_buffer->head].dst;
                 rob_buffer->buffer[rob_buffer->head].valid = false;
                 rob_buffer->buffer[rob_buffer->head].ready = false;
+                
+                if (rmt_index != -1) {
+                    iq_str->issue_queue[rmt_index].valid = false;
+                    iq_str->issue_queue[rmt_index].src1_ready = false;
+                    iq_str->issue_queue[rmt_index].src2_ready = false;
+                    iq_str->issue_queue[rmt_index].global_idx = -1;
+                    iq_str->issue_queue[rmt_index].rob_tag = -1;
+                    iq_str->issue_queue[rmt_index].src1_tag = -1;
+                    iq_str->issue_queue[rmt_index].src2_tag = -1;
+                }
+                RT->pipeline_instr.erase(RT->pipeline_instr.begin() + RT->pipeline_instr[rob_buffer->buffer[rob_buffer->head].global_idx]);
+                rob_buffer->buffer[rob_buffer->head].dst = -1;
                 rob_buffer->buffer[rob_buffer->head].global_idx = -1;
                 rob_buffer->head = (rob_buffer->head + 1) % (int) params.rob_size;
-                if (rob_buffer->buffer[i].dst != -1) {
-                    iq_str->issue_queue[i].valid = false;
-                    iq_str->issue_queue[i].src1_ready = false;
-                    iq_str->issue_queue[i].src2_ready = false;
-                    iq_str->issue_queue[i].global_idx = -1;
-                    iq_str->issue_queue[i].rob_tag = -1;
-                    iq_str->issue_queue[i].src1_tag = -1;
-                    iq_str->issue_queue[i].src2_tag = -1;
-                }
             }
             else break;
         }
@@ -494,7 +524,7 @@ int main (int argc, char* argv[])
         // else printf("empty\n");
         // printf("empty: %d\n", sim.DE->isEmpty());
         global_counter++;
-        if (global_counter >= 8) test = false;
+        if (global_counter >= 15) test = false;
         //printf("%d\n", instr_list[0].FE.start);
         //printf("global counter: %llx\n", global_counter);
         //test = false;

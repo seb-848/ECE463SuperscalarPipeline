@@ -43,9 +43,10 @@ class IQ {
     unsigned long int count = 0;;
     unsigned long int iq_size = 0;;
 
-    IQ(unsigned long int iq_s) {
+    IQ(unsigned long int iq_s, iq_entry def_iq_val) {
         iq_size = iq_s;
-        issue_queue.resize(iq_size);
+        //issue_queue.resize(iq_size);
+        issue_queue.assign(iq_size, def_iq_val);
         count = 0;
     }
 
@@ -81,19 +82,26 @@ class IQ {
     }
 
    std:: vector<int> oldest_up_to_width_indices(unsigned long int w) {
-        std::vector <int> sorted_iq;
+        std::vector <int> sorted_iq((int)w);
         //std::vector <basic_comp_entry> track;
-        for (int i = 0; i < count; i++) {
+        int valid = valid_entries();
+        for (int i = 0; i < issue_queue.size(); i++) {
             if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
                 sorted_iq.push_back(issue_queue[i].global_idx);
             }
         }
 
         std::sort(sorted_iq.begin(), sorted_iq.end());
-
-        while (sorted_iq.size() > w) {
+        printf("valid #: %d\n",valid);
+        
+        if (valid > (int)w) valid = (int)w;
+        while (sorted_iq.size() > valid) {
             sorted_iq.pop_back();
         }
+        for (int i = 0; i < sorted_iq.size(); i++) {
+            printf("sorted iq after elim: %d, %d\n",i, sorted_iq[i]);
+        }
+        //printf("sorted iq #: %d\n",sorted_iq.size());
 
         for (int i = 0; i < sorted_iq.size(); i++) {
             for (int k = 0; k < issue_queue.size(); k++) {
@@ -103,6 +111,7 @@ class IQ {
                 }
             }
         }
+        printf("sorted iq #: %d\n",sorted_iq.size());
 
         return sorted_iq;
         // if (!count == 0 || !((int)issue_queue.size() == 0)) return 0;
@@ -387,6 +396,7 @@ class Simulator {
     std::vector<rmt_entry> rmt;
     ROB* rob_buffer;
     IQ* iq_str;
+    iq_entry def;
 
     Simulator(proc_params p, FILE* f) {
         params = p;
@@ -401,7 +411,7 @@ class Simulator {
         WB = new Pipeline_stage(params.width);
         RT = new Pipeline_stage(params.width);
         rob_buffer = new ROB(params.rob_size);
-        iq_str = new IQ(params.iq_size);
+        iq_str = new IQ(params.iq_size, def);
         rmt.resize(67);
         for (int i = 0; i < 67; i++) {
             rmt[i].rob_tag = -1;
