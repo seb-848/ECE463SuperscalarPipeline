@@ -149,9 +149,10 @@ void Simulator::rename() {
         rmt[current_inst.dest].rob_tag = current_inst.rob_tag;
 
 //printf("dest fixed\n");
-        RN->fill_next_stage(RR);
+        //RN->fill_next_stage(RR);
         //printf("next stage filled\n");
     }
+    RN->fill_next_stage(RR);
     return;
 }
 
@@ -383,11 +384,12 @@ void Simulator::write_back() {
     }
 
     WB->clear();
+    return;
 }
 
 void Simulator::retire() {
     if (RT->isEmpty()) return;
-    
+    return;
 }
 
 int main (int argc, char* argv[])
