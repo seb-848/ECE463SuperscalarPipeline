@@ -439,7 +439,7 @@ int main (int argc, char* argv[])
         //printf("FE empty: %d\n", sim.FE->isEmpty());
         //sim.write_back();
         //sim.execute();
-        sim.issue();
+        //sim.issue();
         sim.dispatch();
         sim.RegRead();
         sim.rename();
