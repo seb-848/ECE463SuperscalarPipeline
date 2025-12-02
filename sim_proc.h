@@ -1,6 +1,7 @@
 #ifndef SIM_PROC_H
 #define SIM_PROC_H
 #include <vector>
+#include <algorithm>
 
 int const EX_LIST_LIMIT_FACTOR = 5;
 
@@ -48,12 +49,13 @@ class IQ {
         return (iq_size - count) >= w;
     }
 
-    int* available_indices(unsigned long int w) {
-        int* indices = new int[w];
+    std::vector <int> available_indices(unsigned long int w) {
+        std::vector<int> indices;
         int spaces = 0;
         for (int i = 0; i < iq_size && spaces < w; i++) {
             if (!issue_queue[i].valid) {
-                indices[spaces++] = i;
+                indices.push_back(i);// = i;
+                spaces++;
             }
         }
         return indices;
@@ -74,56 +76,128 @@ class IQ {
         return count;
     }
 
-    int* oldest_up_to_width_indices(unsigned long int w) {
-        //printf("IN FUNC\n");
-        int min = issue_queue[0].global_idx;
-        int count = 1;
-        int entries_taken = 0;
-        int take_num = w;
-        
-        bool used = false;
-
-        for (int i = 0; i < iq_size; i++) {
+   std:: vector<int> oldest_up_to_width_indices(unsigned long int w) {
+        std::vector <int> sorted_iq;
+        for (int i = 0; i < count; i++) {
             if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
-                entries_taken++;
+                sorted_iq.push_back(issue_queue[i].global_idx);
             }
         }
 
-        if (entries_taken < w) take_num = entries_taken;
-        int* indices = new int[take_num + 1]();
-        for (int i = 1; i < take_num + 1; i++) {
-            indices[i] = -1;
+        std::sort(sorted_iq.begin(), sorted_iq.end());
+
+        while (sorted_iq.size() > w) {
+            sorted_iq.pop_back();
         }
-        indices[0] = take_num + 1;
-        // printf("GETTING OLDEST INST\n");
-        // printf("first index for finding oldest in func %d\n", indices[0]);
-        while(count <= take_num) {
-            for (int i = 0; i < iq_size; i++) {
-                if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
-                    //printf("valid entry found, seq: %d\n", issue_queue[i].global_idx);
-                    if (min >= issue_queue[i].global_idx) {
-                        for (int k = 1; k < indices[0]; k++) {
-                            if (indices[k] == issue_queue[i].global_idx && indices[k] != -1) {
-                                used = true;
-                                //printf("NOT UNIQUE\n");
-                                break;
-                            }
-                        }
-                        if (!used)  {
-                            min = issue_queue[i].global_idx;
-                            used = false;
-                            indices[count++] = min;
-                            min++;
+
+        return sorted_iq;
+        // if (!count == 0 || !((int)issue_queue.size() == 0)) return 0;
+        // int min;
+        // int min_found = 0;
+        // int valid_found = valid_entries();
+        // if (valid_found > (int)w) valid_found = (int)w;
+        // int* old_idx = new int[valid_found + 1];
+        // bool used = false;
+
+        // // populate old idx
+        // if (valid_found == 0) {
+        //     old_idx[0] = 0;
+        //     return old_idx;
+        // }
+        // else {
+        //     old_idx[0] = valid_found;
+        //     for (int i = 1; i < valid_found + 1; i++) {
+        //         old_idx[i] = -1;
+        //     }
+        // }
+        
+
+        // // initialize min
+        // for (int i = 0; i < issue_queue.size(); i++) {
+        //     if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
+        //         min = issue_queue[i].global_idx;
+        //     }
+        // }
+
+        
+        // // get the absoulute min
+        // for(int i = 0; i < issue_queue.size(); i++) {
+        //     if (issue_queue[i].global_idx < min && issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
+        //         min = issue_queue[i].global_idx;
+        //         // for (int k = min_found; k < valid_found + 1; k++) {
+        //         //     if (issue_queue[i].global_idx == old_idx[k] || (issue_queue[i].global_idx < old_idx[k] && old_idx[k] != )) {
+        //         //         used = true;
+        //         //         break;
+        //         //     }
+        //         //     else if (k == valid_found + 1) {
+
+        //         //     }
+        //         // }
+        //         // if ()
+        //         old_idx[1] = min;
+        //     }
+        // }
+
+        // min_found++;
+
+        // if (valid_found == 1) return old_idx;
+
+        // for(int i = 0; i < issue_queue.size() && min_found < w; i++) {
+
+        // }
+
+
+
+        //printf("IN FUNC\n");
+    //     int min = issue_queue[0].global_idx;
+    //     int count = 1;
+    //     int entries_taken = 0;
+    //     int take_num = w;
+        
+    //     bool used = false;
+
+    //     for (int i = 0; i < iq_size; i++) {
+    //         if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
+    //             entries_taken++;
+    //         }
+    //     }
+
+    //     if (entries_taken < w) take_num = entries_taken;
+    //     int* indices = new int[take_num + 1]();
+    //     for (int i = 1; i < take_num + 1; i++) {
+    //         indices[i] = -1;
+    //     }
+    //     indices[0] = take_num + 1;
+    //     // printf("GETTING OLDEST INST\n");
+    //     // printf("first index for finding oldest in func %d\n", indices[0]);
+    //     while(count <= take_num) {
+    //         for (int i = 0; i < iq_size; i++) {
+    //             if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
+    //                 //printf("valid entry found, seq: %d\n", issue_queue[i].global_idx);
+    //                 if (min >= issue_queue[i].global_idx) {
+    //                     for (int k = 1; k < indices[0]; k++) {
+    //                         if (indices[k] == issue_queue[i].global_idx && indices[k] != -1) {
+    //                             used = true;
+    //                             //printf("NOT UNIQUE\n");
+    //                             break;
+    //                         }
+    //                     }
+    //                     if (!used)  {
+    //                         min = issue_queue[i].global_idx;
+    //                         used = false;
+    //                         indices[count++] = min;
+    //                         min++;
                             
-                            //printf("REPLACING MIN\n");
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        return indices;
-    }
+    //                         //printf("REPLACING MIN\n");
+    //                         break;
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return indices;
+    // }
+   }
 };
 
 class ROB {
@@ -131,8 +205,8 @@ class ROB {
     std::vector<rob_entry> buffer;
     int head = 0;
     int tail = 0;
-    unsigned long int count;
-    unsigned long int rob_size;
+    unsigned long int count = 0;
+    unsigned long int rob_size = 0;
 
     ROB(unsigned long int r_size) {
         rob_size = r_size;
@@ -149,7 +223,8 @@ class ROB {
     }
 
     bool isEmpty() {
-        return count == 0;
+        if (count == 0) return true;
+        else return false;
     }
 
     int allocate (int global_seq, int d) {
@@ -185,6 +260,7 @@ typedef struct instruction {
     // rmt tags for srcs
     int src1_tag = -1;
     int src2_tag = -1;
+    int retired = -1;
     // index in rob that instruction is in
     // if add r2, r4, #2 and rob tag is 5, rmt gets 5 for the rob tag and valid 1 into r2
     int rob_tag = -1;
