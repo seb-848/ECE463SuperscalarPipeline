@@ -687,13 +687,13 @@ void Simulator::retire() {
     int retired_inst_count = 0;
     // timing
     if (instr_list[RT->pipeline_instr[0]].RT.start == -1) {
-        for (int i = 0; i < RT->count; i++) {
+        for (int i = 0; i < RT->pipeline_instr.size(); i++) {
             instr_list[RT->pipeline_instr[i]].RT.start = global_counter;
         }
     }
     
     
-    for (int i = 0; i < RT->count; i++) {
+    for (int i = 0; i < RT->pipeline_instr.size(); i++) {
         //printf("is retire ready: %d\n", instr_list[RT->pipeline_instr[i]].retired);
         //printf("retire count in retire: %d\n", RT->count);
         if (!instr_list[RT->pipeline_instr[i]].retired) {
@@ -733,6 +733,10 @@ void Simulator::retire() {
                 rob_buffer->buffer[rob_buffer->head].dst = -1;
                 rob_buffer->buffer[rob_buffer->head].global_idx = -1;
                 rob_buffer->head = (rob_buffer->head + 1) % (int)params.rob_size;
+                auto rt_idx = std::find(RT->pipeline_instr.begin(), RT->pipeline_instr.end(), retired);
+
+                if (rt_idx != RT->pipeline_instr.end()) RT->pipeline_instr.erase(RT->pipeline_instr.begin() + std::distance(RT->pipeline_instr.begin(), rt_idx));
+                RT->count--;
                 retired++;
                 
             }
