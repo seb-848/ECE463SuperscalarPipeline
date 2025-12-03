@@ -82,6 +82,15 @@ class IQ {
         return count;
     }
 
+    int index_find(int inst_global_index) {
+        for (int i = 0; i < issue_queue.size(); i++) {
+            if (issue_queue[i].global_idx == inst_global_index) {
+                return inst_global_index;
+            }
+        }
+        return 0;
+    }
+
     std:: vector<int> oldest_up_to_width_indices(unsigned long int w);
 //    std:: vector<int> oldest_up_to_width_indices(unsigned long int w) {
 //         std::vector <int> sorted_iq;

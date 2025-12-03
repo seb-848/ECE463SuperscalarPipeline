@@ -665,14 +665,17 @@ void Simulator::retire() {
                 rob_buffer->buffer[rob_buffer->head].ready = false;
                 instr_list[rob_buffer->buffer[rob_buffer->head].global_idx].retired = true;
                 
-                if (rmt_index != -1) {
-                    iq_str->issue_queue[rmt_index].valid = false;
-                    iq_str->issue_queue[rmt_index].src1_ready = false;
-                    iq_str->issue_queue[rmt_index].src2_ready = false;
-                    iq_str->issue_queue[rmt_index].global_idx = -1;
-                    iq_str->issue_queue[rmt_index].rob_tag = -1;
-                    iq_str->issue_queue[rmt_index].src1_tag = -1;
-                    iq_str->issue_queue[rmt_index].src2_tag = -1;
+                //std::vector <int> get_index = iq_str->oldest_up_to_width_indices(1);
+                //rmt_index = get_index[0];
+                int iq_index = iq_str->index_find(rob_buffer->buffer[rob_buffer->head].global_idx);
+                if (iq_index != -1) {
+                    iq_str->issue_queue[iq_index].valid = false;
+                    iq_str->issue_queue[iq_index].src1_ready = false;
+                    iq_str->issue_queue[iq_index].src2_ready = false;
+                    iq_str->issue_queue[iq_index].global_idx = -1;
+                    iq_str->issue_queue[iq_index].rob_tag = -1;
+                    iq_str->issue_queue[iq_index].src1_tag = -1;
+                    iq_str->issue_queue[iq_index].src2_tag = -1;
                 }
                 //RT->pipeline_instr.erase(RT->pipeline_instr.begin() + RT->pipeline_instr[rob_buffer->buffer[rob_buffer->head].global_idx]);
                 rob_buffer->buffer[rob_buffer->head].dst = -1;
