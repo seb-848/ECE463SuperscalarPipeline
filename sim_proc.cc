@@ -343,14 +343,17 @@ void Simulator::issue() {
     if (iq_str->isEmpty()) return;
     //printf("ISSUE IS NOT EMPTY\n");
     //timing including issue queue
+
     for (int i = 0; i < params.iq_size; i++) {
         if (iq_str->issue_queue[i].valid) {
             if (instr_list[iq_str->issue_queue[i].global_idx].IS.start == -1) {
                 instr_list[iq_str->issue_queue[i].global_idx].IS.start = global_counter;
             }
-                instr_list[iq_str->issue_queue[i].global_idx].IS.duration++;
+            else instr_list[iq_str->issue_queue[i].global_idx].IS.duration++;
         }
     }
+
+    
     
     //if (IS->isEmpty()) IS->pipeline_instr.resize(params.width);
     //printf("still in issue\n");
@@ -492,8 +495,8 @@ void Simulator::execute() {
         //EX->execute_list.erase(EX->execute_list.begin());
     }
     EX->count = (int)EX->execute_list.size();
-    RT->count = (int)RT->pipeline_instr.size();
-    WB->count = (int)WB->pipeline_instr.size();
+    // RT->count = (int)RT->pipeline_instr.size();
+    // WB->count = (int)WB->pipeline_instr.size();
     //execute_count = 0;//ithink
     //EX
     // while (execute_count != 0) {
@@ -554,8 +557,8 @@ void Simulator::write_back() {
 
     //printf("retire count in write back: %d\n", RT->count);
     WB->clear();
-    EX->count = (int)EX->execute_list.size();
-    RT->count = (int)RT->pipeline_instr.size();
+    //EX->count = (int)EX->execute_list.size();
+    //RT->count = (int)RT->pipeline_instr.size();
     WB->count = (int)WB->pipeline_instr.size();
     return;
 }
@@ -650,8 +653,8 @@ void Simulator::retire() {
     // for (int i = 0; i < retired; i++) {
     //     RT->pipeline_instr.erase(RT->pipeline_instr.begin() + 0);
     // }
-    EX->count = (int)EX->execute_list.size();
-    RT->count = (int)RT->pipeline_instr.size();
+    //EX->count = (int)EX->execute_list.size();
+    //RT->count = (int)RT->pipeline_instr.size();
     WB->count = (int)WB->pipeline_instr.size();
     
     
