@@ -36,6 +36,52 @@ bool fetch_done = false;
 
 // }
 
+int IQ::valid_entries() {
+        int count = 0;
+        // for (int i = 0; i < iq_size; i++) {
+        //     if ()
+        //     if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
+                
+        //         count++;
+        //     }
+        // }
+
+        for (int i = 0; i < issue_queue.size(); i++) {
+            if (issue_queue[i].valid) {
+                if (instr_list[issue_queue[i].global_idx].src1 != -1) {
+                    if (issue_queue[i].src1_ready) {
+                        if (instr_list[issue_queue[i].global_idx].src2 != -1) {
+                            if (issue_queue[i].src2_ready) {
+                                count++;
+                                continue;
+                            }
+                            else {
+                                continue;
+                            }
+                        }
+                    } 
+                    else {
+                        continue;
+                    }
+                }
+                if (instr_list[issue_queue[i].global_idx].src2 != -1) {
+                    if (issue_queue[i].src2_ready) {
+                        count++;
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                else {
+                    count++;
+                    continue;
+                }
+                //sorted_iq.push_back(issue_queue[i].global_idx);
+            }
+        }
+        return count;
+    }
+
 std:: vector<int> IQ::oldest_up_to_width_indices(unsigned long int w) {
         std::vector <int> sorted_iq;
         //std::vector <basic_comp_entry> track;
@@ -761,7 +807,7 @@ int main (int argc, char* argv[])
         //printf("global counter: %llx\n", global_counter);
         //test = false;
         test = simulation.advance_cycle();
-        if (global_counter >= 10000000) test = false;
+        if (global_counter >= 100000) test = false;
     }
     while (test);
 

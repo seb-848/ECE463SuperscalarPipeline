@@ -71,16 +71,51 @@ class IQ {
         else return false;
     }
 
-    int valid_entries() {
-        int count = 0;
-        for (int i = 0; i < iq_size; i++) {
-            if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
+    int valid_entries(); //{
+    //     int count = 0;
+    //     // for (int i = 0; i < iq_size; i++) {
+    //     //     if ()
+    //     //     if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
                 
-                count++;
-            }
-        }
-        return count;
-    }
+    //     //         count++;
+    //     //     }
+    //     // }
+
+    //     for (int i = 0; i < issue_queue.size(); i++) {
+    //         if (issue_queue[i].valid) {
+    //             if (instr_list[issue_queue[i].global_idx].src1 != -1) {
+    //                 if (issue_queue[i].src1_ready) {
+    //                     if (instr_list[issue_queue[i].global_idx].src2 != -1) {
+    //                         if (issue_queue[i].src2_ready) {
+    //                             count++;
+    //                             continue;
+    //                         }
+    //                         else {
+    //                             continue;
+    //                         }
+    //                     }
+    //                 } 
+    //                 else {
+    //                     continue;
+    //                 }
+    //             }
+    //             if (instr_list[issue_queue[i].global_idx].src2 != -1) {
+    //                 if (issue_queue[i].src2_ready) {
+    //                     count++;
+    //                 }
+    //                 else {
+    //                     continue;
+    //                 }
+    //             }
+    //             else {
+    //                 count++;
+    //                 continue;
+    //             }
+    //             //sorted_iq.push_back(issue_queue[i].global_idx);
+    //         }
+    //     }
+    //     return count;
+    // }
 
     int index_find(int inst_global_index) {
         for (int i = 0; i < issue_queue.size(); i++) {
