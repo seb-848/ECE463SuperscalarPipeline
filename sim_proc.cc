@@ -585,9 +585,9 @@ void Simulator::execute() {
     //         instr_list[EX->execute_list[i].global_idx].EX.start = global_counter;
     //     }
     // }
-    for (int i = 0; i < RT->pipeline_instr.size(); i++) {
-        if (instr_list[RT->pipeline_instr[i]].RT.start == -1) {
-            instr_list[RT->pipeline_instr[i]].RT.start = global_counter;
+    for (int i = 0; i < EX->execute_list.size(); i++) {
+        if (instr_list[EX->execute_list[i].global_idx].EX.start == -1) {
+            instr_list[EX->execute_list[i].global_idx].EX.start = global_counter;
         }
     }
     for (int i = 0; i < EX->execute_list.size(); i++) {
