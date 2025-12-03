@@ -688,11 +688,17 @@ void Simulator::retire() {
     if (RT->isEmpty()) return;
     int retired_inst_count = 0;
     // timing
-    if (instr_list[RT->pipeline_instr[0]].RT.start == -1) {
-        for (int i = 0; i < RT->pipeline_instr.size(); i++) {
+    for (int i = 0; i < RT->pipeline_instr.size(); i++) {
+        if (instr_list[RT->pipeline_instr[i]].RT.start == -1) {
             instr_list[RT->pipeline_instr[i]].RT.start = global_counter;
         }
     }
+
+    // if (instr_list[RT->pipeline_instr[0]].RT.start == -1) {
+    //     for (int i = 0; i < RT->pipeline_instr.size(); i++) {
+    //         instr_list[RT->pipeline_instr[i]].RT.start = global_counter;
+    //     }
+    // }
     
     
     for (int i = 0; i < RT->pipeline_instr.size(); i++) {
