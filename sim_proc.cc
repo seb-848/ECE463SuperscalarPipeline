@@ -484,7 +484,7 @@ void Simulator::execute() {
     // }
     int removed = 0;
     EX->count = EX->execute_list.size();
-    for (int i = EX->count - 1; removed < execute_count || i >= 0; i--) {
+    for (int i = EX->count - 1; removed < execute_count && i >= 0; i--) {
         if (EX->execute_list[i].time_left == 0) {
             EX->execute_list.erase(EX->execute_list.begin() + i);
             ++removed;
@@ -586,7 +586,7 @@ void Simulator::retire() {
         }
         //instr_list[RT->pipeline_instr[i]].RT.duration++;
     }
-    int retired = 0;
+    int retired_seq = 0;
     
     //retire inst, remove from rob
     
@@ -631,14 +631,15 @@ void Simulator::retire() {
                 // }
                 //RT->pipeline_instr.erase(RT->pipeline_instr.begin() + RT->pipeline_instr[rob_buffer->buffer[rob_buffer->head].global_idx]);
                 rob_buffer->buffer[rob_buffer->head].dst = -1;
+                retired_seq = rob_buffer->buffer[rob_buffer->head].global_idx;
                 rob_buffer->buffer[rob_buffer->head].global_idx = -1;
                 rob_buffer->head = (rob_buffer->head + 1) % (int)params.rob_size;
                 rob_buffer->count--;
-                auto rt_idx = std::find(RT->pipeline_instr.begin(), RT->pipeline_instr.end(), retired);
+                auto rt_idx = std::find(RT->pipeline_instr.begin(), RT->pipeline_instr.end(), retired_seq);
 
                 if (rt_idx != RT->pipeline_instr.end()) RT->pipeline_instr.erase(RT->pipeline_instr.begin() + std::distance(RT->pipeline_instr.begin(), rt_idx));
                 RT->count--;
-                retired++;
+                retired_seq++;
                 
             }
             else break;
