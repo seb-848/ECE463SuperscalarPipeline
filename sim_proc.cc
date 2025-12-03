@@ -710,7 +710,7 @@ void Simulator::retire() {
         //     if (RT->pipeline_instr)
         // }
         for (int i = 0; i < (int)params.width; i++) {//rob_buffer->rob_size; i++) {
-            if (rob_buffer->buffer[rob_buffer->head].valid && rob_buffer->buffer[rob_buffer->head].ready) {
+            if (rob_buffer->buffer[rob_buffer->head].valid && rob_buffer->buffer[rob_buffer->head].ready && rob_buffer->buffer[rob_buffer->head].global_idx == retired) {
                 if (instr_list[rob_buffer->buffer[rob_buffer->head].global_idx].retired) break;
                 int rmt_index = rob_buffer->buffer[rob_buffer->head].dst;
                 rob_buffer->buffer[rob_buffer->head].valid = false;
@@ -732,8 +732,9 @@ void Simulator::retire() {
                 //RT->pipeline_instr.erase(RT->pipeline_instr.begin() + RT->pipeline_instr[rob_buffer->buffer[rob_buffer->head].global_idx]);
                 rob_buffer->buffer[rob_buffer->head].dst = -1;
                 rob_buffer->buffer[rob_buffer->head].global_idx = -1;
-                rob_buffer->head = (rob_buffer->head + 1) % (int) params.rob_size;
+                rob_buffer->head = (rob_buffer->head + 1) % (int)params.rob_size;
                 retired++;
+                
             }
             else break;
         }
