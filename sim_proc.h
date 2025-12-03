@@ -82,7 +82,7 @@ class IQ {
     }
 
    std:: vector<int> oldest_up_to_width_indices(unsigned long int w) {
-        std::vector <int> sorted_iq((int)w);
+        std::vector <int> sorted_iq;
         //std::vector <basic_comp_entry> track;
         int valid = valid_entries();
         for (int i = 0; i < issue_queue.size(); i++) {
@@ -92,15 +92,18 @@ class IQ {
         }
 
         std::sort(sorted_iq.begin(), sorted_iq.end());
-        printf("valid #: %d\n",valid);
-        
+        //printf("valid #: %d\n",valid);
         if (valid > (int)w) valid = (int)w;
-        while (sorted_iq.size() > valid) {
-            sorted_iq.pop_back();
-        }
-        for (int i = 0; i < sorted_iq.size(); i++) {
-            printf("sorted iq after elim: %d, %d\n",i, sorted_iq[i]);
-        }
+        if (valid <= 0) return std::vector <int>();
+        
+        if ((int)sorted_iq.size() > valid) sorted_iq.resize(valid);
+        //if (valid <= 0)
+        // while (sorted_iq.size() > valid) {
+        //     sorted_iq.pop_back();
+        // }
+        // for (int i = 0; i < sorted_iq.size(); i++) {
+        //     printf("sorted iq after elim: %d, %d\n",i, sorted_iq[i]);
+        // }
         //printf("sorted iq #: %d\n",sorted_iq.size());
 
         for (int i = 0; i < sorted_iq.size(); i++) {
@@ -111,7 +114,7 @@ class IQ {
                 }
             }
         }
-        printf("sorted iq #: %d\n",sorted_iq.size());
+        //printf("sorted iq #: %d\n",sorted_iq.size());
 
         return sorted_iq;
         // if (!count == 0 || !((int)issue_queue.size() == 0)) return 0;
@@ -283,7 +286,7 @@ typedef struct instruction {
     // rmt tags for srcs
     int src1_tag = -1;
     int src2_tag = -1;
-    int retired = -1;
+    bool retired = false;
     // index in rob that instruction is in
     // if add r2, r4, #2 and rob tag is 5, rmt gets 5 for the rob tag and valid 1 into r2
     int rob_tag = -1;
