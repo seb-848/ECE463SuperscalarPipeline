@@ -610,7 +610,7 @@ void Simulator::execute() {
             //EX->execute_list.erase(EX->execute_list.begin() + i);
             //EX->count--;
             //executed_inst.push_back(i);
-            EX->execute_list[i].global_idx = -1;
+            //EX->execute_list[i].global_idx = -1;
             execute_count++;
             //printf("current loop done\n");
         }
