@@ -75,6 +75,7 @@ class IQ {
         int count = 0;
         for (int i = 0; i < iq_size; i++) {
             if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
+                
                 count++;
             }
         }
@@ -86,8 +87,18 @@ class IQ {
         //std::vector <basic_comp_entry> track;
         int valid = valid_entries();
         for (int i = 0; i < issue_queue.size(); i++) {
-            if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
-                sorted_iq.push_back(issue_queue[i].global_idx);
+            if (issue_queue[i].valid) {
+                if (instr_list[issue_queue[i].global_idx].src1 != -1) {
+                    if (issue_queue[i].src1_ready) {
+                        if (instr_list[issue_queue[i].global_idx].src2 != -1) {
+                            if (issue_queue[i].src2_ready) sorted_iq.push_back(issue_queue[i].global_idx);
+                        }
+                    }
+                }
+                if (instr_list[issue_queue[i].global_idx].src2 != -1) {
+                    if (issue_queue[i].src2_ready) sorted_iq.push_back(issue_queue[i].global_idx);
+                }
+                //sorted_iq.push_back(issue_queue[i].global_idx);
             }
         }
 

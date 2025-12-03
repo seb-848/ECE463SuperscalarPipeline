@@ -280,7 +280,8 @@ void Simulator::issue() {
     //return;
     //printf("getting the indicies to take out of iq\n");
 
-    if (iq_str->valid_entries() == 0) return;
+    //if (iq_str->valid_entries() == 0) return;
+
     //printf("valid entries were found\n");
     //printf("getting the indicies to take out of iq\n");
     std::vector <int> indicies = iq_str->oldest_up_to_width_indices(params.width);
@@ -447,6 +448,7 @@ void Simulator::write_back() {
             }
             //printf("out of editing of iq\n");
         }
+        //printf("rob tag: %d\n", current_inst.rob_tag);
         //printf("going to next wb or exiting\n");
         RT->pipeline_instr.push_back(current_inst.seq_num); 
         RT->count++;
