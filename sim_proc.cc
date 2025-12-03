@@ -745,10 +745,18 @@ void Simulator::retire() {
                     iq_str->issue_queue[iq_index].src2_tag = -1;
                     iq_str->count--;
                 }
-                instruction &current_inst = instr_list[rob_buffer->buffer[rob_buffer->head].global_idx];
-                if (current_inst.dest != -1 && rmt[current_inst.dest].rob_tag == current_inst.rob_tag) {
-                    rmt[current_inst.dest].rob_tag = -1;
-                    rmt[current_inst.dest].valid = false;
+                // instruction &current_inst = instr_list[rob_buffer->buffer[rob_buffer->head].global_idx];
+                // if (current_inst.dest != -1 && rmt[current_inst.dest].rob_tag == current_inst.rob_tag) {
+                //     rmt[current_inst.dest].rob_tag = -1;
+                //     rmt[current_inst.dest].valid = false;
+                // }
+
+                if (rob_buffer->buffer[rob_buffer->head].valid && rob_buffer->buffer[rob_buffer->head].ready) {
+                    int dest_reg = rob_buffer->buffer[rob_buffer->head].dst;
+                    if (dest_reg != -1) {
+                        rmt[dest_reg].valid = false;
+                        rmt[dest_reg].rob_tag = -1;
+                    }
                 }
                 //RT->pipeline_instr.erase(RT->pipeline_instr.begin() + RT->pipeline_instr[rob_buffer->buffer[rob_buffer->head].global_idx]);
                 rob_buffer->buffer[rob_buffer->head].dst = -1;
