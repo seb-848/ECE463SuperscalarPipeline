@@ -616,10 +616,14 @@ void Simulator::execute() {
     // for (int i = 0; i < execute_count; i++) {
     //     printf("EX contents i: %d, content: %d\n", i, EX->execute_list[i].global_idx);
     // }
-    while (execute_count != 0) {
-        EX->execute_list.erase(EX->execute_list.begin() + executed_inst[execute_count - 1]);
-        --execute_count;
+    for (int i = 0; i < execute_count; i++) {
+        EX->execute_list.erase(EX->execute_list.begin());
     }
+    execute_count = 0;//ithink
+    // while (execute_count != 0) {
+    //     EX->execute_list.erase(EX->execute_list.begin() + executed_inst[execute_count - 1]);
+    //     --execute_count;
+    // }
     //execute_count = 0;
     
     return;
@@ -678,7 +682,7 @@ void Simulator::write_back() {
 }
 
 void Simulator::retire() {
-    if (!rob_buffer->buffer[rob_buffer->head].ready) return;
+    //if (!rob_buffer->buffer[rob_buffer->head].ready) return;
     if (RT->isEmpty()) return;
     int retired_inst_count = 0;
     // timing
@@ -697,6 +701,7 @@ void Simulator::retire() {
         }
         //instr_list[RT->pipeline_instr[i]].RT.duration++;
     }
+    int retired = 0;
     
     //retire inst, remove from rob
     
@@ -706,6 +711,7 @@ void Simulator::retire() {
         // }
         for (int i = 0; i < (int)params.width; i++) {//rob_buffer->rob_size; i++) {
             if (rob_buffer->buffer[rob_buffer->head].valid && rob_buffer->buffer[rob_buffer->head].ready) {
+                if (instr_list[rob_buffer->buffer[rob_buffer->head].global_idx].retired) break;
                 int rmt_index = rob_buffer->buffer[rob_buffer->head].dst;
                 rob_buffer->buffer[rob_buffer->head].valid = false;
                 rob_buffer->buffer[rob_buffer->head].ready = false;
@@ -727,11 +733,16 @@ void Simulator::retire() {
                 rob_buffer->buffer[rob_buffer->head].dst = -1;
                 rob_buffer->buffer[rob_buffer->head].global_idx = -1;
                 rob_buffer->head = (rob_buffer->head + 1) % (int) params.rob_size;
-
+                retired++;
             }
             else break;
         }
     }
+
+    //for (int i = 0; i < )
+    // for (int i = 0; i < retired; i++) {
+    //     RT->pipeline_instr.erase(RT->pipeline_instr.begin() + 0);
+    // }
     
     
     return;
