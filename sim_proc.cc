@@ -492,7 +492,7 @@ void Simulator::issue() {
                 instr_list[iq_str->issue_queue[i].global_idx].IS.duration++;
         }
     }
-
+    
     //if (IS->isEmpty()) IS->pipeline_instr.resize(params.width);
     //printf("still in issue\n");
     //return;
@@ -595,7 +595,7 @@ void Simulator::execute() {
         EX->execute_list[i].time_left--;
     }
 
-    std::vector <int> executed_inst;
+    //std::vector <int> executed_inst;
     int execute_count = 0;
 
     //printf("ex is about to check to move to wb\n");
@@ -609,7 +609,8 @@ void Simulator::execute() {
             //printf("transfered\n");
             //EX->execute_list.erase(EX->execute_list.begin() + i);
             //EX->count--;
-            executed_inst.push_back(i);
+            //executed_inst.push_back(i);
+            EX->execute_list[i].global_idx = -1;
             execute_count++;
             //printf("current loop done\n");
         }
@@ -622,11 +623,14 @@ void Simulator::execute() {
     // for (int i = 0; i < execute_count; i++) {
     //     printf("EX contents i: %d, content: %d\n", i, EX->execute_list[i].global_idx);
     // }
-    for (int i = 0; i < execute_count; i++) {
-        EX->execute_list.erase(EX->execute_list.begin());
+    for (int i = execute_count; i > execute_count; i--) {
+        if (EX->execute_list[i].time_left == 0) {
+            EX->execute_list.erase(EX->execute_list.begin() + execute_count);
+        }
+        //EX->execute_list.erase(EX->execute_list.begin());
     }
     EX->count = EX->execute_list.size();
-    execute_count = 0;//ithink
+    //execute_count = 0;//ithink
     //EX
     // while (execute_count != 0) {
     //     EX->execute_list.erase(EX->execute_list.begin() + executed_inst[execute_count - 1]);
@@ -745,19 +749,19 @@ void Simulator::retire() {
                     iq_str->issue_queue[iq_index].src2_tag = -1;
                     iq_str->count--;
                 }
-                // instruction &current_inst = instr_list[rob_buffer->buffer[rob_buffer->head].global_idx];
-                // if (current_inst.dest != -1 && rmt[current_inst.dest].rob_tag == current_inst.rob_tag) {
-                //     rmt[current_inst.dest].rob_tag = -1;
-                //     rmt[current_inst.dest].valid = false;
-                // }
-
-                if (rob_buffer->buffer[rob_buffer->head].valid && rob_buffer->buffer[rob_buffer->head].ready) {
-                    int dest_reg = rob_buffer->buffer[rob_buffer->head].dst;
-                    if (dest_reg != -1) {
-                        rmt[dest_reg].valid = false;
-                        rmt[dest_reg].rob_tag = -1;
-                    }
+                instruction &current_inst = instr_list[rob_buffer->buffer[rob_buffer->head].global_idx];
+                if (current_inst.dest != -1 && rmt[current_inst.dest].rob_tag == current_inst.rob_tag) {
+                    rmt[current_inst.dest].rob_tag = -1;
+                    rmt[current_inst.dest].valid = false;
                 }
+
+                // if (rob_buffer->buffer[rob_buffer->head].valid && rob_buffer->buffer[rob_buffer->head].ready) {
+                //     int dest_reg = rob_buffer->buffer[rob_buffer->head].dst;
+                //     if (dest_reg != -1) {
+                //         rmt[dest_reg].valid = false;
+                //         rmt[dest_reg].rob_tag = -1;
+                //     }
+                // }
                 //RT->pipeline_instr.erase(RT->pipeline_instr.begin() + RT->pipeline_instr[rob_buffer->buffer[rob_buffer->head].global_idx]);
                 rob_buffer->buffer[rob_buffer->head].dst = -1;
                 rob_buffer->buffer[rob_buffer->head].global_idx = -1;
