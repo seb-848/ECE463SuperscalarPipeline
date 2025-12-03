@@ -21,31 +21,9 @@ uint64_t global_counter = 0; // global cycle counter
 uint64_t fetch_seq_counter = 0;
 std::vector<instruction> instr_list; //global  instruction list
 bool fetch_done = false;
-//rmt_entry rmt[67];
-
-// void Pipeline_stage::increment_duration(std::vector <instruction> &list, timing &instruction::* member) {
-//     for (int i = 0; i < this->pipeline_instr.size(); i++) {
-//         printf("%d\n", i);
-//         if (instr_list[this->pipeline_instr[i]]..start == -1) {
-//             instr_list[this->pipeline_instr[i]].timer.start = global_counter;
-//         }
-//         else {
-//             instr_list[this->pipeline_instr[i]].DE.duration++;
-//         }
-//     }
-
-// }
 
 int IQ::valid_entries() {
         int count = 0;
-        // for (int i = 0; i < iq_size; i++) {
-        //     if ()
-        //     if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
-                
-        //         count++;
-        //     }
-        // }
-
         for (int i = 0; i < issue_queue.size(); i++) {
             if (issue_queue[i].valid) {
                 if (instr_list[issue_queue[i].global_idx].src1 != -1) {
@@ -76,7 +54,6 @@ int IQ::valid_entries() {
                     count++;
                     continue;
                 }
-                //sorted_iq.push_back(issue_queue[i].global_idx);
             }
         }
         return count;
@@ -84,7 +61,6 @@ int IQ::valid_entries() {
 
 std:: vector<int> IQ::oldest_up_to_width_indices(unsigned long int w) {
         std::vector <int> sorted_iq;
-        //std::vector <basic_comp_entry> track;
         int valid = valid_entries();
         for (int i = 0; i < issue_queue.size(); i++) {
             if (issue_queue[i].valid) {
@@ -116,7 +92,6 @@ std:: vector<int> IQ::oldest_up_to_width_indices(unsigned long int w) {
                     sorted_iq.push_back(issue_queue[i].global_idx);
                     continue;
                 }
-                //sorted_iq.push_back(issue_queue[i].global_idx);
             }
         }
 
@@ -126,14 +101,6 @@ std:: vector<int> IQ::oldest_up_to_width_indices(unsigned long int w) {
         if (valid <= 0) return std::vector <int>();
         
         if ((int)sorted_iq.size() > valid) sorted_iq.resize(valid);
-        //if (valid <= 0)
-        // while (sorted_iq.size() > valid) {
-        //     sorted_iq.pop_back();
-        // }
-        // for (int i = 0; i < sorted_iq.size(); i++) {
-        //     printf("sorted iq after elim: %d, %d\n",i, sorted_iq[i]);
-        // }
-        //printf("sorted iq #: %d\n",sorted_iq.size());
 
         for (int i = 0; i < sorted_iq.size(); i++) {
             for (int k = 0; k < issue_queue.size(); k++) {
@@ -143,115 +110,7 @@ std:: vector<int> IQ::oldest_up_to_width_indices(unsigned long int w) {
                 }
             }
         }
-        //printf("sorted iq #: %d\n",sorted_iq.size());
-
         return sorted_iq;
-        // if (!count == 0 || !((int)issue_queue.size() == 0)) return 0;
-        // int min;
-        // int min_found = 0;
-        // int valid_found = valid_entries();
-        // if (valid_found > (int)w) valid_found = (int)w;
-        // int* old_idx = new int[valid_found + 1];
-        // bool used = false;
-
-        // // populate old idx
-        // if (valid_found == 0) {
-        //     old_idx[0] = 0;
-        //     return old_idx;
-        // }
-        // else {
-        //     old_idx[0] = valid_found;
-        //     for (int i = 1; i < valid_found + 1; i++) {
-        //         old_idx[i] = -1;
-        //     }
-        // }
-        
-
-        // // initialize min
-        // for (int i = 0; i < issue_queue.size(); i++) {
-        //     if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
-        //         min = issue_queue[i].global_idx;
-        //     }
-        // }
-
-        
-        // // get the absoulute min
-        // for(int i = 0; i < issue_queue.size(); i++) {
-        //     if (issue_queue[i].global_idx < min && issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
-        //         min = issue_queue[i].global_idx;
-        //         // for (int k = min_found; k < valid_found + 1; k++) {
-        //         //     if (issue_queue[i].global_idx == old_idx[k] || (issue_queue[i].global_idx < old_idx[k] && old_idx[k] != )) {
-        //         //         used = true;
-        //         //         break;
-        //         //     }
-        //         //     else if (k == valid_found + 1) {
-
-        //         //     }
-        //         // }
-        //         // if ()
-        //         old_idx[1] = min;
-        //     }
-        // }
-
-        // min_found++;
-
-        // if (valid_found == 1) return old_idx;
-
-        // for(int i = 0; i < issue_queue.size() && min_found < w; i++) {
-
-        // }
-
-
-
-        //printf("IN FUNC\n");
-    //     int min = issue_queue[0].global_idx;
-    //     int count = 1;
-    //     int entries_taken = 0;
-    //     int take_num = w;
-        
-    //     bool used = false;
-
-    //     for (int i = 0; i < iq_size; i++) {
-    //         if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
-    //             entries_taken++;
-    //         }
-    //     }
-
-    //     if (entries_taken < w) take_num = entries_taken;
-    //     int* indices = new int[take_num + 1]();
-    //     for (int i = 1; i < take_num + 1; i++) {
-    //         indices[i] = -1;
-    //     }
-    //     indices[0] = take_num + 1;
-    //     // printf("GETTING OLDEST INST\n");
-    //     // printf("first index for finding oldest in func %d\n", indices[0]);
-    //     while(count <= take_num) {
-    //         for (int i = 0; i < iq_size; i++) {
-    //             if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
-    //                 //printf("valid entry found, seq: %d\n", issue_queue[i].global_idx);
-    //                 if (min >= issue_queue[i].global_idx) {
-    //                     for (int k = 1; k < indices[0]; k++) {
-    //                         if (indices[k] == issue_queue[i].global_idx && indices[k] != -1) {
-    //                             used = true;
-    //                             //printf("NOT UNIQUE\n");
-    //                             break;
-    //                         }
-    //                     }
-    //                     if (!used)  {
-    //                         min = issue_queue[i].global_idx;
-    //                         used = false;
-    //                         indices[count++] = min;
-    //                         min++;
-                            
-    //                         //printf("REPLACING MIN\n");
-    //                         break;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     return indices;
-    // }
    }
 bool Simulator::advance_cycle() {
     bool advance = true;
@@ -624,7 +483,8 @@ void Simulator::execute() {
     //     printf("EX contents i: %d, content: %d\n", i, EX->execute_list[i].global_idx);
     // }
     int removed = 0;
-    for (int i = EX->execute_list.size(); removed < execute_count; i--) {
+    EX->count = EX->execute_list.size();
+    for (int i = EX->count; removed < execute_count; i--) {
         if (EX->execute_list[i].time_left == 0) {
             EX->execute_list.erase(EX->execute_list.begin() + i);
             ++removed;
