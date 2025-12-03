@@ -491,7 +491,9 @@ void Simulator::execute() {
         }
         //EX->execute_list.erase(EX->execute_list.begin());
     }
-    EX->count = EX->execute_list.size();
+    EX->count = (int)EX->execute_list.size();
+    RT->count = (int)RT->pipeline_instr.size();
+    WB->count = (int)WB->pipeline_instr.size();
     //execute_count = 0;//ithink
     //EX
     // while (execute_count != 0) {
@@ -552,6 +554,9 @@ void Simulator::write_back() {
 
     //printf("retire count in write back: %d\n", RT->count);
     WB->clear();
+    EX->count = (int)EX->execute_list.size();
+    RT->count = (int)RT->pipeline_instr.size();
+    WB->count = (int)WB->pipeline_instr.size();
     return;
 }
 
@@ -644,6 +649,9 @@ void Simulator::retire() {
     // for (int i = 0; i < retired; i++) {
     //     RT->pipeline_instr.erase(RT->pipeline_instr.begin() + 0);
     // }
+    EX->count = (int)EX->execute_list.size();
+    RT->count = (int)RT->pipeline_instr.size();
+    WB->count = (int)WB->pipeline_instr.size();
     
     
     return;
