@@ -430,5 +430,6 @@ class Simulator {
     void execute();
     void write_back();
     void retire();
+    bool advance_cycle();
 };
 #endif

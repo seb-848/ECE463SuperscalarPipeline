@@ -20,6 +20,7 @@
 uint64_t global_counter = 0; // global cycle counter
 uint64_t fetch_seq_counter = 0;
 std::vector<instruction> instr_list; //global  instruction list
+bool fetch_done = false;
 //rmt_entry rmt[67];
 
 // void Pipeline_stage::increment_duration(std::vector <instruction> &list, timing &instruction::* member) {
@@ -32,6 +33,17 @@ std::vector<instruction> instr_list; //global  instruction list
 //             instr_list[this->pipeline_instr[i]].DE.duration++;
 //         }
 //     }
+
+// }
+// bool Simulator::advance_cycle() {
+//     bool advance = true;
+
+//     if (fetch_done && rob_buffer->isEmpty() && iq_str->isEmpty() && EX->isEmpty() && WB->isEmpty()) {
+//         if (FE->isEmpty() && DE->isEmpty() && RN->isEmpty() && RR->isEmpty() && DI->isEmpty()) {
+//             advance = false;
+//         }
+//     }
+//     return advance;
 // }
 
 void Pipeline_stage::fill_next_stage (Pipeline_stage* stage) {
@@ -67,6 +79,9 @@ void Simulator::fetch() {
                 // DE->pipeline_instr.push_back(instr.seq_num); DE->count++;
                 // FE->clear();
                 //printf("seq num: %d\n", instr_list[fetch_seq_counter - 1].seq_num);
+            }
+            else {
+                fetch_done = true;
             }
         }
     }
