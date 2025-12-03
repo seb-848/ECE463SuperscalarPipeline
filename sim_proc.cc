@@ -47,11 +47,15 @@ std:: vector<int> IQ::oldest_up_to_width_indices(unsigned long int w) {
                         if (instr_list[issue_queue[i].global_idx].src2 != -1) {
                             if (issue_queue[i].src2_ready) {
                                 sorted_iq.push_back(issue_queue[i].global_idx);
+                                continue;
                             }
                             else {
                                 continue;
                             }
                         }
+                    } 
+                    else {
+                        continue;
                     }
                 }
                 if (instr_list[issue_queue[i].global_idx].src2 != -1) {
@@ -62,7 +66,11 @@ std:: vector<int> IQ::oldest_up_to_width_indices(unsigned long int w) {
                         continue;
                     }
                 }
-                sorted_iq.push_back(issue_queue[i].global_idx);
+                else {
+                    sorted_iq.push_back(issue_queue[i].global_idx);
+                    continue;
+                }
+                //sorted_iq.push_back(issue_queue[i].global_idx);
             }
         }
 
