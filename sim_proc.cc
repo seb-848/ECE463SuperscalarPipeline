@@ -579,9 +579,15 @@ void Simulator::execute() {
     if (EX->isEmpty()) return;
     //printf("ex not empty\n");
     //timing
-    if (instr_list[EX->execute_list[0].global_idx].EX.start == -1) {
-        for (int i = 0; i < EX->execute_list.size(); i++) {
-            instr_list[EX->execute_list[i].global_idx].EX.start = global_counter;
+    
+    // if (instr_list[EX->execute_list[0].global_idx].EX.start == -1) {
+    //     for (int i = 0; i < EX->execute_list.size(); i++) {
+    //         instr_list[EX->execute_list[i].global_idx].EX.start = global_counter;
+    //     }
+    // }
+    for (int i = 0; i < RT->pipeline_instr.size(); i++) {
+        if (instr_list[RT->pipeline_instr[i]].RT.start == -1) {
+            instr_list[RT->pipeline_instr[i]].RT.start = global_counter;
         }
     }
     for (int i = 0; i < EX->execute_list.size(); i++) {
