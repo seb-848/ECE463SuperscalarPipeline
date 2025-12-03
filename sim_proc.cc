@@ -623,9 +623,11 @@ void Simulator::execute() {
     // for (int i = 0; i < execute_count; i++) {
     //     printf("EX contents i: %d, content: %d\n", i, EX->execute_list[i].global_idx);
     // }
-    for (int i = execute_count; i > execute_count; i--) {
+    int removed = 0;
+    for (int i = EX->execute_list.size(); removed < execute_count; i--) {
         if (EX->execute_list[i].time_left == 0) {
             EX->execute_list.erase(EX->execute_list.begin() + execute_count);
+            ++removed;
         }
         //EX->execute_list.erase(EX->execute_list.begin());
     }
