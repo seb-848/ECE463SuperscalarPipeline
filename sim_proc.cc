@@ -626,7 +626,7 @@ void Simulator::execute() {
     int removed = 0;
     for (int i = EX->execute_list.size(); removed < execute_count; i--) {
         if (EX->execute_list[i].time_left == 0) {
-            EX->execute_list.erase(EX->execute_list.begin() + execute_count);
+            EX->execute_list.erase(EX->execute_list.begin() + i);
             ++removed;
         }
         //EX->execute_list.erase(EX->execute_list.begin());
