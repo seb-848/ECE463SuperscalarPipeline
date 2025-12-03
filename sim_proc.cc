@@ -761,7 +761,7 @@ int main (int argc, char* argv[])
         //printf("global counter: %llx\n", global_counter);
         //test = false;
         test = simulation.advance_cycle();
-        //if (global_counter >= 100000) test = false;
+        if (global_counter >= 10000000) test = false;
     }
     while (test);
 
