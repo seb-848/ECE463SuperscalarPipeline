@@ -619,7 +619,9 @@ void Simulator::execute() {
     for (int i = 0; i < execute_count; i++) {
         EX->execute_list.erase(EX->execute_list.begin());
     }
+    EX->count = EX->execute_list.size();
     execute_count = 0;//ithink
+    //EX
     // while (execute_count != 0) {
     //     EX->execute_list.erase(EX->execute_list.begin() + executed_inst[execute_count - 1]);
     //     --execute_count;
@@ -709,8 +711,9 @@ void Simulator::retire() {
         // for (int i = 0; i < RT->count && retired_inst_count < (int)params.width; i++) {
         //     if (RT->pipeline_instr)
         // }
+        // rob_buffer->buffer[rob_buffer->head].global_idx == retired
         for (int i = 0; i < (int)params.width; i++) {//rob_buffer->rob_size; i++) {
-            if (rob_buffer->buffer[rob_buffer->head].valid && rob_buffer->buffer[rob_buffer->head].ready && rob_buffer->buffer[rob_buffer->head].global_idx == retired) {
+            if (rob_buffer->buffer[rob_buffer->head].valid && rob_buffer->buffer[rob_buffer->head].ready) {
                 if (instr_list[rob_buffer->buffer[rob_buffer->head].global_idx].retired) break;
                 int rmt_index = rob_buffer->buffer[rob_buffer->head].dst;
                 rob_buffer->buffer[rob_buffer->head].valid = false;
@@ -728,11 +731,13 @@ void Simulator::retire() {
                     iq_str->issue_queue[iq_index].rob_tag = -1;
                     iq_str->issue_queue[iq_index].src1_tag = -1;
                     iq_str->issue_queue[iq_index].src2_tag = -1;
+                    iq_str->count--;
                 }
                 //RT->pipeline_instr.erase(RT->pipeline_instr.begin() + RT->pipeline_instr[rob_buffer->buffer[rob_buffer->head].global_idx]);
                 rob_buffer->buffer[rob_buffer->head].dst = -1;
                 rob_buffer->buffer[rob_buffer->head].global_idx = -1;
                 rob_buffer->head = (rob_buffer->head + 1) % (int)params.rob_size;
+                rob_buffer->count--;
                 auto rt_idx = std::find(RT->pipeline_instr.begin(), RT->pipeline_instr.end(), retired);
 
                 if (rt_idx != RT->pipeline_instr.end()) RT->pipeline_instr.erase(RT->pipeline_instr.begin() + std::distance(RT->pipeline_instr.begin(), rt_idx));
