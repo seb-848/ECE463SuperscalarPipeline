@@ -45,13 +45,17 @@ class IQ {
 
     IQ(unsigned long int iq_s, iq_entry def_iq_val) {
         iq_size = iq_s;
-        //issue_queue.resize(iq_size);
         issue_queue.assign(iq_size, def_iq_val);
         count = 0;
     }
 
-    bool available(unsigned long int w) {
-        return (iq_size - count) >= w;
+    bool available() {
+        for (int i = 0; i < iq_size; i++) {
+            if (!issue_queue[i].valid) {
+                return true;
+            }
+        }
+        return false;
     }
 
     std::vector <int> available_indices(unsigned long int w) {
@@ -59,7 +63,7 @@ class IQ {
         int spaces = 0;
         for (int i = 0; i < iq_size && spaces < w; i++) {
             if (!issue_queue[i].valid) {
-                indices.push_back(i);// = i;
+                indices.push_back(i);
                 spaces++;
             }
         }
@@ -67,55 +71,12 @@ class IQ {
     }
 
     bool isEmpty() {
+        //for (int i = 0; i < )
         if (count == 0) return true;
         else return false;
     }
 
-    int valid_entries(); //{
-    //     int count = 0;
-    //     // for (int i = 0; i < iq_size; i++) {
-    //     //     if ()
-    //     //     if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
-                
-    //     //         count++;
-    //     //     }
-    //     // }
-
-    //     for (int i = 0; i < issue_queue.size(); i++) {
-    //         if (issue_queue[i].valid) {
-    //             if (instr_list[issue_queue[i].global_idx].src1 != -1) {
-    //                 if (issue_queue[i].src1_ready) {
-    //                     if (instr_list[issue_queue[i].global_idx].src2 != -1) {
-    //                         if (issue_queue[i].src2_ready) {
-    //                             count++;
-    //                             continue;
-    //                         }
-    //                         else {
-    //                             continue;
-    //                         }
-    //                     }
-    //                 } 
-    //                 else {
-    //                     continue;
-    //                 }
-    //             }
-    //             if (instr_list[issue_queue[i].global_idx].src2 != -1) {
-    //                 if (issue_queue[i].src2_ready) {
-    //                     count++;
-    //                 }
-    //                 else {
-    //                     continue;
-    //                 }
-    //             }
-    //             else {
-    //                 count++;
-    //                 continue;
-    //             }
-    //             //sorted_iq.push_back(issue_queue[i].global_idx);
-    //         }
-    //     }
-    //     return count;
-    // }
+    int valid_entries();
 
     int index_find(int inst_global_index) {
         for (int i = 0; i < issue_queue.size(); i++) {
@@ -126,160 +87,7 @@ class IQ {
         return -1;
     }
 
-    std:: vector<int> oldest_up_to_width_indices(unsigned long int w);
-//    std:: vector<int> oldest_up_to_width_indices(unsigned long int w) {
-//         std::vector <int> sorted_iq;
-//         //std::vector <basic_comp_entry> track;
-//         int valid = valid_entries();
-//         for (int i = 0; i < issue_queue.size(); i++) {
-//             if (issue_queue[i].valid) {
-//                 if (instr_list[issue_queue[i].global_idx].src1 != -1) {
-//                     if (issue_queue[i].src1_ready) {
-//                         if (instr_list[issue_queue[i].global_idx].src2 != -1) {
-//                             if (issue_queue[i].src2_ready) sorted_iq.push_back(issue_queue[i].global_idx);
-//                         }
-//                     }
-//                 }
-//                 if (instr_list[issue_queue[i].global_idx].src2 != -1) {
-//                     if (issue_queue[i].src2_ready) sorted_iq.push_back(issue_queue[i].global_idx);
-//                 }
-//                 //sorted_iq.push_back(issue_queue[i].global_idx);
-//             }
-//         }
-
-//         std::sort(sorted_iq.begin(), sorted_iq.end());
-//         //printf("valid #: %d\n",valid);
-//         if (valid > (int)w) valid = (int)w;
-//         if (valid <= 0) return std::vector <int>();
-        
-//         if ((int)sorted_iq.size() > valid) sorted_iq.resize(valid);
-//         //if (valid <= 0)
-//         // while (sorted_iq.size() > valid) {
-//         //     sorted_iq.pop_back();
-//         // }
-//         // for (int i = 0; i < sorted_iq.size(); i++) {
-//         //     printf("sorted iq after elim: %d, %d\n",i, sorted_iq[i]);
-//         // }
-//         //printf("sorted iq #: %d\n",sorted_iq.size());
-
-//         for (int i = 0; i < sorted_iq.size(); i++) {
-//             for (int k = 0; k < issue_queue.size(); k++) {
-//                 if (sorted_iq[i] == issue_queue[k].global_idx) {
-//                     sorted_iq[i] = k;
-//                     break;
-//                 }
-//             }
-//         }
-//         //printf("sorted iq #: %d\n",sorted_iq.size());
-
-//         return sorted_iq;
-//         // if (!count == 0 || !((int)issue_queue.size() == 0)) return 0;
-//         // int min;
-//         // int min_found = 0;
-//         // int valid_found = valid_entries();
-//         // if (valid_found > (int)w) valid_found = (int)w;
-//         // int* old_idx = new int[valid_found + 1];
-//         // bool used = false;
-
-//         // // populate old idx
-//         // if (valid_found == 0) {
-//         //     old_idx[0] = 0;
-//         //     return old_idx;
-//         // }
-//         // else {
-//         //     old_idx[0] = valid_found;
-//         //     for (int i = 1; i < valid_found + 1; i++) {
-//         //         old_idx[i] = -1;
-//         //     }
-//         // }
-        
-
-//         // // initialize min
-//         // for (int i = 0; i < issue_queue.size(); i++) {
-//         //     if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
-//         //         min = issue_queue[i].global_idx;
-//         //     }
-//         // }
-
-        
-//         // // get the absoulute min
-//         // for(int i = 0; i < issue_queue.size(); i++) {
-//         //     if (issue_queue[i].global_idx < min && issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
-//         //         min = issue_queue[i].global_idx;
-//         //         // for (int k = min_found; k < valid_found + 1; k++) {
-//         //         //     if (issue_queue[i].global_idx == old_idx[k] || (issue_queue[i].global_idx < old_idx[k] && old_idx[k] != )) {
-//         //         //         used = true;
-//         //         //         break;
-//         //         //     }
-//         //         //     else if (k == valid_found + 1) {
-
-//         //         //     }
-//         //         // }
-//         //         // if ()
-//         //         old_idx[1] = min;
-//         //     }
-//         // }
-
-//         // min_found++;
-
-//         // if (valid_found == 1) return old_idx;
-
-//         // for(int i = 0; i < issue_queue.size() && min_found < w; i++) {
-
-//         // }
-
-
-
-//         //printf("IN FUNC\n");
-//     //     int min = issue_queue[0].global_idx;
-//     //     int count = 1;
-//     //     int entries_taken = 0;
-//     //     int take_num = w;
-        
-//     //     bool used = false;
-
-//     //     for (int i = 0; i < iq_size; i++) {
-//     //         if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
-//     //             entries_taken++;
-//     //         }
-//     //     }
-
-//     //     if (entries_taken < w) take_num = entries_taken;
-//     //     int* indices = new int[take_num + 1]();
-//     //     for (int i = 1; i < take_num + 1; i++) {
-//     //         indices[i] = -1;
-//     //     }
-//     //     indices[0] = take_num + 1;
-//     //     // printf("GETTING OLDEST INST\n");
-//     //     // printf("first index for finding oldest in func %d\n", indices[0]);
-//     //     while(count <= take_num) {
-//     //         for (int i = 0; i < iq_size; i++) {
-//     //             if (issue_queue[i].valid && issue_queue[i].src1_ready && issue_queue[i].src2_ready) {
-//     //                 //printf("valid entry found, seq: %d\n", issue_queue[i].global_idx);
-//     //                 if (min >= issue_queue[i].global_idx) {
-//     //                     for (int k = 1; k < indices[0]; k++) {
-//     //                         if (indices[k] == issue_queue[i].global_idx && indices[k] != -1) {
-//     //                             used = true;
-//     //                             //printf("NOT UNIQUE\n");
-//     //                             break;
-//     //                         }
-//     //                     }
-//     //                     if (!used)  {
-//     //                         min = issue_queue[i].global_idx;
-//     //                         used = false;
-//     //                         indices[count++] = min;
-//     //                         min++;
-                            
-//     //                         //printf("REPLACING MIN\n");
-//     //                         break;
-//     //                     }
-//     //                 }
-//     //             }
-//     //         }
-//     //     }
-//     //     return indices;
-//     // }
-//    }
+    std:: vector<int> oldest_up_to_width_indices(unsigned long int w, int space);
 };
 
 class ROB {
@@ -343,8 +151,6 @@ typedef struct instruction {
     int src1_tag = -1;
     int src2_tag = -1;
     bool retired = false;
-    // index in rob that instruction is in
-    // if add r2, r4, #2 and rob tag is 5, rmt gets 5 for the rob tag and valid 1 into r2
     int rob_tag = -1;
 
     instruction(uint64_t p, int op, int d, int s1, int s2) {
@@ -354,14 +160,6 @@ typedef struct instruction {
         src1 = s1;
         src2 = s2;
     }
-
-    // instruction () {
-    //     pc = 0;
-    //     op_type = 0;
-    //     dest = 0;
-    //     src1 = 0;
-    //     src2 = 0;
-    // }
     timing FE;
     timing DE;
     timing RN;
@@ -373,7 +171,6 @@ typedef struct instruction {
     timing RT;
 }instruction;
 
-//template <typename T>
 class Pipeline_stage {
     public:
 
@@ -383,7 +180,6 @@ class Pipeline_stage {
      int count = 0;
 
     Pipeline_stage(unsigned long int w) {
-        //pipeline_instr.resize(w);
         width = w;
     }
     //void increment_duration (std::vector<instruction> &list, timing timer);
@@ -402,6 +198,8 @@ class Pipeline_stage {
         if (count == 0) return true;
         else return false;
     }
+
+    void move_next_stage(Pipeline_stage* stage);
 };
 
 struct execute_entry {
@@ -426,7 +224,7 @@ class EX_Stage {
         else return false;
     }
     bool full() {
-        return count == width;
+        return count == width * EX_LIST_LIMIT_FACTOR;
     }
 
     void clear() {
@@ -482,6 +280,7 @@ class Simulator {
     void rename();
     void RegRead();
     void dispatch();
+    void iq_func();
     void issue();
     void execute();
     void write_back();
