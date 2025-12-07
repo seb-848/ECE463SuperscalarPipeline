@@ -49,13 +49,16 @@ class IQ {
         count = 0;
     }
 
-    bool available() {
+    bool available(int width = 1) {
+        int count = 0;
         for (int i = 0; i < iq_size; i++) {
             if (!issue_queue[i].valid) {
-                return true;
+                count++;
+                //return true;
             }
         }
-        return false;
+        if (count >= width) return true;
+        else return false;
     }
 
     std::vector <int> available_indices(unsigned long int w) {

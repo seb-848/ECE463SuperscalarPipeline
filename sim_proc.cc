@@ -133,7 +133,7 @@ std:: vector<int> IQ::oldest_up_to_width_indices(unsigned long int w, int space)
 bool Simulator::advance_cycle() {
     bool advance = true;
 
-    if (fetch_done && rob_buffer->isEmpty() && iq_str->isEmpty() && EX->isEmpty() && WB->isEmpty()) {
+    if (fetch_done && rob_buffer->isEmpty() && iq_str->isEmpty() && EX->isEmpty() && WB->isEmpty() && RT->isEmpty()) {
         if (FE->isEmpty() && DE->isEmpty() && RN->isEmpty() && RR->isEmpty() && DI->isEmpty()) {
             advance = false;
         }
@@ -314,8 +314,12 @@ void Simulator::dispatch() {
     instr_list[DI->pipeline_instr[i]].DI.duration++;
    }
 
+    
+    bool available_space = iq_str->available(DI->pipeline_instr.size());
+    if (!available_space) return;
+
     int moved = 0;
-    for (int i = 0; i < (int)DI->pipeline_instr.size() && iq_str->available(); i++) {
+    for (int i = 0; i < (int)DI->pipeline_instr.size() && moved < (int)params.width; i++) {
         int filling_index = -1;
         instruction &current_inst = instr_list[DI->pipeline_instr[i]];
         for (int k = 0; k < (int)iq_str->issue_queue.size(); k++) {
@@ -839,6 +843,15 @@ int main (int argc, char* argv[])
             instr_list[i].WB.start, instr_list[i].WB.duration,
             instr_list[i].RT.start, instr_list[i].RT.duration);
     }
+    printf("# === Simulator Command =========\n");
+    printf("# ./sim %lu %lu %lu %s\n", params.rob_size, params.iq_size, params.width, trace_file);
+    printf("# === Processor Configuration ===\n# ROB_SIZE = %lu\n# IQ_SIZE  = %lu\n# WIDTH    = %lu\n",params.rob_size, params.iq_size, params.width);
+    printf("# === Simulation Results ========\n");
+    printf("# Dynamic Instruction Count    = %d\n", fetch_seq_counter);
+    printf("# Cycles                       = %d\n", global_counter);
+    printf("# Instructions Per Cycle (IPC) = %.2f\n", (double)fetch_seq_counter/global_counter);
+
+
 
     // while(fscanf(FP, "%lx %d %d %d %d", &pc, &op_type, &dest, &src1, &src2) != EOF)
     // {
