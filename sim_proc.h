@@ -153,6 +153,9 @@ typedef struct instruction {
     // rmt tags for srcs
     int src1_tag = -1;
     int src2_tag = -1;
+    // Track which instruction (by seq_num) each src tag points to
+    int src1_producer_seq = -1;
+    int src2_producer_seq = -1;
     bool retired = false;
     int rob_tag = -1;
 

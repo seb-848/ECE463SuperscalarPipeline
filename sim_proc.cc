@@ -116,8 +116,11 @@ std:: vector<int> IQ::oldest_up_to_width_indices(unsigned long int w, int space)
         //if (valid > (int)w) valid = (int)w;
         if (valid <= 0) return std::vector <int>();
         
-        // Limit by both width and available space
-        int limit = std::min((int)w, space);
+        
+        int limit = 0;
+        if (space > w) limit = w;
+        else limit = space;
+        
         if ((int)sorted_iq.size() > limit) sorted_iq.resize(limit);
 
         for (int i = 0; i < sorted_iq.size(); i++) {
@@ -233,13 +236,18 @@ void Simulator::rename() {
     }
     instr_list[RN->pipeline_instr[i]].RN.duration++;
    }
-//printf("still in rename\n");
-    if (!rob_buffer->available(RN->pipeline_instr.size())) return;
+//printf("still in rename\n")//;
     
+    int not_in_rob = 0;
+    for (int i = 0; i < RN->pipeline_instr.size(); i++) {
+        if (instr_list[RN->pipeline_instr[i]].rob_tag == -1) not_in_rob++;
+    }
+    if (not_in_rob > 0 && !rob_buffer->available(not_in_rob)) return;
+
     for (int i = 0; i < RN->pipeline_instr.size(); i++) {
         instruction &current_inst = instr_list[RN->pipeline_instr[i]];
         
-        // Skip if already renamed (has a valid ROB entry)
+        // rob entry already
         if (current_inst.rob_tag != -1) continue;
         
         // put into rob and get rob tag
@@ -250,19 +258,23 @@ void Simulator::rename() {
         if (current_inst.src1 == -1 || !rmt[current_inst.src1].valid) {
             current_inst.src1_tag = -1;
             current_inst.src1_ready = true;
+            current_inst.src1_producer_seq = -1;
         }
         else {
             current_inst.src1_tag = rmt[current_inst.src1].rob_tag;
             current_inst.src1_ready = rob_buffer->buffer[current_inst.src1_tag].ready;
+            current_inst.src1_producer_seq = rob_buffer->buffer[current_inst.src1_tag].global_idx;
         }
 
         if (current_inst.src2 == -1 || !rmt[current_inst.src2].valid) {
             current_inst.src2_tag = -1;
             current_inst.src2_ready = true;
+            current_inst.src2_producer_seq = -1;
         }
         else {
             current_inst.src2_tag = rmt[current_inst.src2].rob_tag;
             current_inst.src2_ready = rob_buffer->buffer[current_inst.src2_tag].ready;
+            current_inst.src2_producer_seq = rob_buffer->buffer[current_inst.src2_tag].global_idx;
         }
         
         if (current_inst.dest != -1) {
@@ -341,13 +353,23 @@ void Simulator::dispatch() {
         moved++;
 
         if (iq_str->issue_queue[filling_index].src1_tag != -1) {
-            if (rob_buffer->buffer[iq_str->issue_queue[filling_index].src1_tag].ready) {
+            // check rob is still expected producer
+            if (rob_buffer->buffer[iq_str->issue_queue[filling_index].src1_tag].global_idx == current_inst.src1_producer_seq) {
+                if (rob_buffer->buffer[iq_str->issue_queue[filling_index].src1_tag].ready) {
+                    iq_str->issue_queue[filling_index].src1_ready = true;
+                }
+            } else {
+                // new rob src ready
                 iq_str->issue_queue[filling_index].src1_ready = true;
             }
         }
 
         if (iq_str->issue_queue[filling_index].src2_tag != -1) {
-            if (rob_buffer->buffer[iq_str->issue_queue[filling_index].src2_tag].ready) {
+            if (rob_buffer->buffer[iq_str->issue_queue[filling_index].src2_tag].global_idx == current_inst.src2_producer_seq) {
+                if (rob_buffer->buffer[iq_str->issue_queue[filling_index].src2_tag].ready) {
+                    iq_str->issue_queue[filling_index].src2_ready = true;
+                }
+            } else {
                 iq_str->issue_queue[filling_index].src2_ready = true;
             }
         }
