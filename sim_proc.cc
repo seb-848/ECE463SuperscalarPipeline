@@ -23,7 +23,6 @@ std::vector<instruction> instr_list; //global  instruction list
 bool fetch_done = false;
 std::vector<int> already_retired;
 
-
 void Pipeline_stage::move_next_stage(Pipeline_stage* stage) {
     if (!stage->full()) {
         int available = stage->width - stage->pipeline_instr.size();
@@ -85,7 +84,7 @@ std:: vector<int> IQ::oldest_up_to_width_indices(unsigned long int w, int space)
         //bool ready_inst = true;
         int valid = 0;
         
-        // Early exit if no space available
+        
         if (space <= 0) return std::vector <int>();
         
         for (int i = 0; i < issue_queue.size(); i++) {
